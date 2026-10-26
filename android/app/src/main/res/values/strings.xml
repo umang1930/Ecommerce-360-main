@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ecommerce360</string>
+    <string name="title_activity_main">ecommerce360</string>
+    <string name="package_name">com.ecommerce360.dashboard</string>
+    <string name="custom_url_scheme">com.ecommerce360.dashboard</string>
+</resources>

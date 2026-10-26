@@ -1,0 +1,263 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Design system definition.
+ *
+ * The @theme inline block maps CSS custom properties to Tailwind utility
+ * classes (e.g. --color-primary -> bg-primary, text-primary).
+ *
+ * The :root and .dark blocks define the actual color values using oklch.
+ * All colors MUST use oklch format.
+ *
+ * To add a new semantic color:
+ * 1. Add the variable to :root (light value) and .dark (dark value)
+ * 2. Register it in @theme inline as --color-<name>: var(--<name>)
+ */
+
+@theme inline {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --shadow-card: 0 1px 2px oklch(0.2 0.03 258 / 0.04), 0 8px 24px oklch(0.2 0.03 258 / 0.05);
+  --shadow-card-hover: 0 2px 4px oklch(0.2 0.03 258 / 0.06), 0 14px 32px oklch(0.2 0.03 258 / 0.09);
+}
+
+:root {
+  --radius: 0.875rem;
+  --background: oklch(0.978 0.004 250);
+  --foreground: oklch(0.235 0.028 258);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.235 0.028 258);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.235 0.028 258);
+  --primary: oklch(0.335 0.062 259);
+  --primary-foreground: oklch(0.985 0.004 250);
+  --secondary: oklch(0.962 0.008 252);
+  --secondary-foreground: oklch(0.335 0.062 259);
+  --muted: oklch(0.964 0.006 252);
+  --muted-foreground: oklch(0.545 0.026 257);
+  --accent: oklch(0.63 0.105 193);
+  --accent-foreground: oklch(0.985 0.004 250);
+  --destructive: oklch(0.575 0.208 26);
+  --destructive-foreground: oklch(0.985 0.004 250);
+  --success: oklch(0.575 0.135 155);
+  --success-foreground: oklch(0.985 0.004 250);
+  --warning: oklch(0.72 0.155 68);
+  --warning-foreground: oklch(0.22 0.03 258);
+  --border: oklch(0.918 0.008 254);
+  --input: oklch(0.918 0.008 254);
+  --ring: oklch(0.63 0.105 193);
+  --chart-1: oklch(0.45 0.115 258);
+  --chart-2: oklch(0.63 0.105 193);
+  --chart-3: oklch(0.72 0.155 68);
+  --chart-4: oklch(0.575 0.135 155);
+  --chart-5: oklch(0.62 0.14 300);
+  --sidebar: oklch(0.235 0.032 259);
+  --sidebar-foreground: oklch(0.9 0.012 252);
+  --sidebar-primary: oklch(0.63 0.105 193);
+  --sidebar-primary-foreground: oklch(0.985 0.004 250);
+  --sidebar-accent: oklch(0.295 0.036 259);
+  --sidebar-accent-foreground: oklch(0.985 0.004 250);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.63 0.105 193);
+}
+
+
+.dark {
+  --background: oklch(0.129 0.042 264.695);
+  --foreground: oklch(0.984 0.003 247.858);
+  --card: oklch(0.208 0.042 265.755);
+  --card-foreground: oklch(0.984 0.003 247.858);
+  --popover: oklch(0.208 0.042 265.755);
+  --popover-foreground: oklch(0.984 0.003 247.858);
+  --primary: oklch(0.929 0.013 255.508);
+  --primary-foreground: oklch(0.208 0.042 265.755);
+  --secondary: oklch(0.279 0.041 260.031);
+  --secondary-foreground: oklch(0.984 0.003 247.858);
+  --muted: oklch(0.279 0.041 260.031);
+  --muted-foreground: oklch(0.704 0.04 256.788);
+  --accent: oklch(0.279 0.041 260.031);
+  --accent-foreground: oklch(0.984 0.003 247.858);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.984 0.003 247.858);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.551 0.027 264.364);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.208 0.042 265.755);
+  --sidebar-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-accent: oklch(0.279 0.041 260.031);
+  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.551 0.027 264.364);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+}
+
+@layer base {
+  body {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.015em;
+  }
+}
+
+@utility tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+@utility card-surface {
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Native / Cross-Platform Enhancements
+ * Applied when running inside Tauri (desktop) or Capacitor (iOS / Android).
+ * Safe-area insets handle notches, punch-holes, home-bar, and status bars.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/* Prevent double-tap zoom on interactive elements (mobile) */
+button,
+a,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
+/* Smooth momentum scrolling on iOS */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Ensure the app fills the full native viewport including safe areas */
+html,
+body,
+#root {
+  height: 100%;
+  min-height: 100%;
+  /* Fill the entire screen including areas behind status bar / nav bar */
+  min-height: 100dvh;
+}
+
+/* Safe-area padding utilities — consumed by layout components */
+@utility safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+@utility safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@utility safe-left {
+  padding-left: env(safe-area-inset-left);
+}
+
+@utility safe-right {
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Header: push content below the status bar on mobile */
+header {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* Bottom navigation / footer: push above home indicator on iOS */
+.bottom-nav {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Desktop (Tauri): remove tap highlight that looks odd on desktop */
+@media (hover: hover) and (pointer: fine) {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Mobile: disable text selection on nav/button areas for a native feel */
+@media (pointer: coarse) {
+  nav,
+  button,
+  [role="button"] {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* Increase tap target minimum size per WCAG mobile guidelines */
+  button,
+  [role="button"],
+  a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "tanstack-start",
+  "crons": [
+    {
+      "path": "/api/cron/sync-orders",
+      "schedule": "30 3 * * *"
+    }
+  ]
+}
