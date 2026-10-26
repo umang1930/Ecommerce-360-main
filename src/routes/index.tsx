@@ -146,8 +146,23 @@ function DashboardPage() {
     }
   }, [isLoading, isAuthenticated, navigate]);
 
-  if (isLoading || !isAuthenticated) {
-    return null;
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4 text-sm text-muted-foreground" role="status">
+        Checking your sign-in…
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-2 bg-background px-4 text-center">
+        <p className="text-sm text-muted-foreground">You are not signed in.</p>
+        <a className="text-sm font-medium text-primary underline-offset-4 hover:underline" href="/login">
+          Continue to sign in
+        </a>
+      </div>
+    );
   }
 
   return (
