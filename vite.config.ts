@@ -25,7 +25,7 @@ export default defineConfig(({ command, mode }) => {
       ? [react(), tailwindcss(), tsconfigPaths()]
       : [
           tanstackStart({ server: { entry: "server" } }),
-          ...(command === "build" ? [nitro({ preset: "vercel" })] : []),
+          ...(command === "build" ? [nitro({ preset: "vercel", renderer: false })] : []),
           react(),
           tailwindcss(),
           tsconfigPaths(),
