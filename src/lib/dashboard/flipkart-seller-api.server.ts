@@ -204,6 +204,7 @@ type ReturnApiItem = Partial<FlipkartReturn> & {
   source?: string;
   status?: string;
   returnStatus?: string;
+  shipmentStatus?: string;
   quantity?: number;
 };
 type ReturnApiResponse = {
@@ -251,6 +252,7 @@ async function searchReturns(
       orderItemId: item.orderItemId ?? "",
       source,
       status: item.status ?? item.returnStatus ?? data.status ?? "UNKNOWN",
+      shipmentStatus: item.shipmentStatus ?? "",
       action: item.action ?? "",
       reason: item.reason ?? "",
       subReason: item.subReason ?? "",

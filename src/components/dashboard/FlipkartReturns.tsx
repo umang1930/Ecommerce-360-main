@@ -15,21 +15,26 @@ function dateLabel(value: string) {
 export function FlipkartReturns() {
   const { filters, data } = useDashboard();
   const range = resolveRange(filters);
-  const returnsQuery = useFlipkartReturns(filters.brand, range.start, range.end);
+  const expectedToday = filters.period === "today";
+  const returnsQuery = useFlipkartReturns(filters.brand, range.start, range.end, expectedToday);
 
   const result = returnsQuery.data;
   const returns = [
     ...(result?.customerReturns ?? []),
     ...(result?.courierReturns ?? []),
-  ].sort((a, b) => (b.createdDate || b.orderDate).localeCompare(a.createdDate || a.orderDate));
+  ]
+    .filter((item) => !expectedToday || (item.source === "courier_return" && item.shipmentStatus.toLowerCase() === "out_for_delivery"))
+    .sort((a, b) => (b.createdDate || b.orderDate).localeCompare(a.createdDate || a.orderDate));
   const orderByItemId = new Map((data?.flipkartOrders ?? []).map((order) => [order.orderItemId, order]));
 
   return (
     <section className="card-surface overflow-hidden">
       <div className="flex items-center justify-between border-b border-border px-5 py-4">
         <div>
-          <h2 className="text-base font-semibold text-foreground">Flipkart Returns</h2>
-          <p className="mt-1 text-xs text-muted-foreground">Customer and courier returns · {range.start} – {range.end}</p>
+          <h2 className="text-base font-semibold text-foreground">{expectedToday ? "Flipkart Returns Expected Today" : "Flipkart Returns"}</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {expectedToday ? `Seller Hub view · Courier returns out for delivery · ${range.start}` : `Customer and courier returns · ${range.start} – ${range.end}`}
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">{returns.length} items</span>
@@ -68,7 +73,7 @@ export function FlipkartReturns() {
             <div className="overflow-x-auto">
               <table className="w-full min-w-[1050px] text-left text-sm">
                 <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
-                  <tr>{["Brand", "Return ID", "Order item", "Type", "Product", "Status", "Reason", "Qty", "Tracking", "Created", "Expected"].map((label) => <th key={label} className="px-4 py-3 font-medium">{label}</th>)}</tr>
+                  <tr>{["Brand", "Return ID", "Order item", "Type", "Product", expectedToday ? "Shipment status" : "Status", "Reason", "Qty", "Tracking", "Created", "Expected"].map((label) => <th key={label} className="px-4 py-3 font-medium">{label}</th>)}</tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {returns.slice(0, 100).map((item, index) => {
@@ -80,7 +85,7 @@ export function FlipkartReturns() {
                         <td className="px-4 py-3">{item.orderItemId || "—"}</td>
                         <td className="px-4 py-3 capitalize">{item.source.replace("_", " ")}</td>
                         <td className="max-w-56 truncate px-4 py-3" title={order?.title}>{order?.title || "Product details unavailable"}</td>
-                        <td className="px-4 py-3"><OrderStatusBadge status={item.status} /></td>
+                        <td className="px-4 py-3"><OrderStatusBadge status={expectedToday ? item.shipmentStatus : item.status} /></td>
                         <td className="px-4 py-3">{[item.reason, item.subReason].filter(Boolean).join(" · ") || "—"}</td>
                         <td className="px-4 py-3">{item.quantity || "—"}</td>
                         <td className="px-4 py-3">{item.trackingId || "—"}</td>

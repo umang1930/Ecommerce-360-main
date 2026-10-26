@@ -25,6 +25,7 @@ export interface FlipkartReturn {
   orderItemId: string;
   source: "customer_return" | "courier_return";
   status: string;
+  shipmentStatus: string;
   action: string;
   reason: string;
   subReason: string;
