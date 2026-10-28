@@ -335,11 +335,12 @@ async function syncSeller(marketplace: Marketplace, seller: Seller, start: strin
   const runInsert = await sql.query(
     sql.dialect === "mysql"
       ? "INSERT INTO order_sync_runs (marketplace, seller, status) VALUES ($1, $2, 'running')"
-      : "INSERT INTO order_sync_runs (marketplace, seller, status) VALUES ($1, $2, 'running') RETURNING id",
+      : "INSERT INTO order_sync_runs (marketplace, seller, status) VALUES ($1, $2, 'running') RETURNING id::text AS id",
     [marketplace, seller],
   );
-  const runId = sql.dialect === "mysql" ? runInsert.insertId : runInsert.rows[0]?.["id"];
-  if (typeof runId !== "number") throw new Error("Could not create the order sync run record.");
+  const runIdValue = sql.dialect === "mysql" ? runInsert.insertId : runInsert.rows[0]?.["id"];
+  const runId = runIdValue == null ? "" : String(runIdValue);
+  if (!/^\d+$/.test(runId)) throw new Error("Could not create the order sync run record.");
   try {
     let orders: SyncedOrder[];
     if (marketplace === "Amazon") {
