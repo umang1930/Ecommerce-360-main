@@ -1,5 +1,5 @@
 param(
-  [string]$BaseUrl = "http://localhost:5173"
+  [string]$BaseUrl = "http://localhost:5175"
 )
 
 $ErrorActionPreference = "Stop"

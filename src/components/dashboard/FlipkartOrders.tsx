@@ -37,9 +37,7 @@ export function FlipkartOrders() {
         </div>
         <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">{uniqueOrderCount} orders · {orders.length} items</span>
       </div>
-      {!data?.sourceLabel.includes("Flipkart") ? (
-        <p className="px-5 py-8 text-sm text-muted-foreground">Connect Flipkart Seller API credentials on the server to show live orders.</p>
-      ) : orders.length === 0 ? (
+      {orders.length === 0 ? (
         <p className="px-5 py-8 text-sm text-muted-foreground">No Flipkart orders found for this date range.</p>
       ) : (
         <div className="overflow-x-auto">

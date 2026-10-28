@@ -228,6 +228,75 @@ async function ensureSchema() {
   return schemaReady;
 }
 
+async function ensureDashboardUsersTable(sql: SqlClient) {
+  if (sql.dialect === "mysql") {
+    await sql.query(`CREATE TABLE IF NOT EXISTS dashboard_users (
+      id BIGINT AUTO_INCREMENT PRIMARY KEY,
+      google_sub VARCHAR(191) NOT NULL UNIQUE,
+      email VARCHAR(320) NOT NULL UNIQUE,
+      display_name VARCHAR(255) NOT NULL,
+      password_hash VARCHAR(255) NULL,
+      created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+      last_login_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
+    const columns = await sql.query(`SELECT COLUMN_NAME AS columnName FROM information_schema.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'dashboard_users' AND COLUMN_NAME = 'password_hash'`);
+    if (columns.rows.length === 0) await sql.query("ALTER TABLE dashboard_users ADD COLUMN password_hash VARCHAR(255) NULL");
+    return;
+  }
+
+  await sql`CREATE TABLE IF NOT EXISTS dashboard_users (
+    id BIGSERIAL PRIMARY KEY,
+    google_sub TEXT NOT NULL UNIQUE,
+    email TEXT NOT NULL UNIQUE,
+    display_name TEXT NOT NULL,
+    password_hash TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_login_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )`;
+  await sql`ALTER TABLE dashboard_users ADD COLUMN IF NOT EXISTS password_hash TEXT`;
+}
+
+/** Create the dashboard user table on first successful Google sign-in and upsert the company account. */
+export async function recordDashboardGoogleUser(user: { sub: string; email: string; name: string }) {
+  const sql = await getSql();
+  await ensureDashboardUsersTable(sql);
+  if (sql.dialect === "mysql") {
+    await sql.query(`INSERT INTO dashboard_users (google_sub, email, display_name, last_login_at)
+      VALUES ($1, $2, $3, CURRENT_TIMESTAMP(3))
+      ON DUPLICATE KEY UPDATE email=VALUES(email), display_name=VALUES(display_name), last_login_at=CURRENT_TIMESTAMP(3)`,
+    [user.sub, user.email, user.name]);
+    return;
+  }
+  await sql`INSERT INTO dashboard_users (google_sub, email, display_name, last_login_at)
+    VALUES (${user.sub}, ${user.email}, ${user.name}, NOW())
+    ON CONFLICT (google_sub) DO UPDATE SET email=EXCLUDED.email, display_name=EXCLUDED.display_name, last_login_at=NOW()`;
+}
+
+export async function getDashboardPasswordUser(email: string) {
+  const sql = await getSql();
+  await ensureDashboardUsersTable(sql);
+  const result = await sql.query("SELECT google_sub, display_name, password_hash FROM dashboard_users WHERE email = $1 LIMIT 1", [email]);
+  const row = result.rows[0];
+  if (!row || typeof row["google_sub"] !== "string" || typeof row["display_name"] !== "string") return null;
+  return {
+    googleSub: row["google_sub"],
+    displayName: row["display_name"],
+    passwordHash: typeof row["password_hash"] === "string" ? row["password_hash"] : null,
+  };
+}
+
+export async function setDashboardPasswordHash(email: string, passwordHash: string) {
+  const sql = await getSql();
+  await ensureDashboardUsersTable(sql);
+  if (sql.dialect === "mysql") {
+    const result = await sql.query("UPDATE dashboard_users SET password_hash = $1, last_login_at = CURRENT_TIMESTAMP(3) WHERE email = $2", [passwordHash, email]);
+    return (result.affectedRows ?? 0) > 0;
+  }
+  const result = await sql.query("UPDATE dashboard_users SET password_hash = $1, last_login_at = NOW() WHERE email = $2 RETURNING google_sub", [passwordHash, email]);
+  return result.rows.length > 0;
+}
+
 async function saveOrders(orders: SyncedOrder[]) {
   const sql = await getSql();
   const uniqueOrders = [...new Map(orders.map((order) => [

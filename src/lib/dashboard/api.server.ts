@@ -1,5 +1,8 @@
 import type { CatalogProduct, OrderFact } from "./demo-source";
 import { loadDashboardOrders } from "./synced-orders.server";
+import type { SyncedOrder } from "./synced-orders.server";
+import { fetchAmazonOrders } from "./amazon-sp-api.server";
+import { fetchFlipkartDeliveredOrders, fetchFlipkartOrders } from "./flipkart-seller-api.server";
 import { canonicalFlipkartSku } from "./brands";
 import {
   addDays,
@@ -21,6 +24,58 @@ import type {
   SalesTrendPoint,
   TopProduct,
 } from "./types";
+
+type Seller = "claspo" | "monkeyman";
+
+async function loadLiveDashboardOrders(input: {
+  start: string; end: string; brand: string; marketplace: string;
+}): Promise<SyncedOrder[]> {
+  const sellers: Seller[] = input.brand === "CLASPO" ? ["claspo"]
+    : input.brand === "MONKEYMAN" ? ["monkeyman"] : ["claspo", "monkeyman"];
+  const start = `${input.start}T00:00:00+05:30`;
+  const requestedEnd = new Date(`${input.end}T23:59:59.999+05:30`);
+  // Keep a buffer for request transit: Amazon requires createdBefore to be at
+  // least two minutes behind its server clock.
+  const safeEnd = new Date(Date.now() - 5 * 60_000);
+  const end = (requestedEnd < safeEnd ? requestedEnd : safeEnd).toISOString();
+  const tasks: Promise<SyncedOrder[]>[] = [];
+
+  if (input.marketplace === "all" || input.marketplace === "Amazon") {
+    for (const seller of sellers) tasks.push((async () => {
+      const result = await fetchAmazonOrders({ data: { seller, createdAfter: start, createdBefore: end } });
+      if (result.message) throw new Error(result.message);
+      return result.orders.map((order) => ({
+        marketplace: "Amazon" as const, seller, orderId: order.orderId,
+        orderItemId: order.orderItemId, sku: order.sku, title: order.title,
+        status: order.status, quantity: order.quantity, totalPrice: order.itemPrice,
+        currency: order.currency, orderDate: order.orderDate, dispatchByDate: null,
+      }));
+    })());
+  }
+
+  if (input.marketplace === "all" || input.marketplace === "Flipkart") {
+    for (const seller of sellers) tasks.push((async () => {
+      const [orders, delivered] = await Promise.all([
+        fetchFlipkartOrders({ data: { seller, fromDate: start, toDate: end } }),
+        fetchFlipkartDeliveredOrders({ data: { seller, fromDate: start, toDate: end } }),
+      ]);
+      const error = orders.message || orders.warning || delivered.message || delivered.warning;
+      if (error) throw new Error(error);
+      const merged = [...new Map([...orders.orders, ...delivered.orders].map((order) => [
+        `${order.orderId}|${order.orderItemId || order.sku || order.orderId}`, order,
+      ])).values()];
+      return merged.map((order) => ({
+        marketplace: "Flipkart" as const, seller, orderId: order.orderId,
+        orderItemId: order.orderItemId || order.sku || order.orderId,
+        sku: order.sku, title: order.title, status: order.status,
+        quantity: order.quantity, totalPrice: order.customerPrice, currency: "INR",
+        orderDate: order.orderDate, dispatchByDate: order.dispatchByDate,
+      }));
+    })());
+  }
+
+  return (await Promise.all(tasks)).flat();
+}
 
 function matches(fact: OrderFact, filters: DashboardFilters, range: DateRange) {
   if (fact.date < range.start || fact.date > range.end) return false;
@@ -130,7 +185,10 @@ export async function fetchDashboardDataOnServer(
   const prev = previousRange(range);
   const retentionStart = addDays(todayIST(), -29);
   const fetchStart = includePreviousPeriod && prev.start >= retentionStart ? prev.start : range.start;
-  const orders = await loadDashboardOrders({
+  const orderSource = filters.period === "today" || filters.period === "yesterday" || filters.period === "last7"
+    ? loadLiveDashboardOrders
+    : loadDashboardOrders;
+  const orders = await orderSource({
     start: fetchStart < retentionStart ? retentionStart : fetchStart,
     end: range.end,
     brand: filters.brand,
@@ -201,7 +259,9 @@ export async function fetchDashboardDataOnServer(
     exceptions,
     rangeLabel: `${formatRangeLabel(range)} · ${filters.marketplace === "all" ? "Amazon + Flipkart" : filters.marketplace}`,
     catalog: catalog.map(({ sku, name, brand }) => ({ sku, name, brand })),
-    sourceLabel: "Synced orders database · Last 30 days",
+    sourceLabel: filters.period === "today" || filters.period === "yesterday" || filters.period === "last7"
+      ? "Live Amazon + Flipkart APIs"
+      : "Synced orders database",
     flipkartOrders,
     deliveredFlipkartOrders: flipkartOrders.filter((order) => order.status.trim().toUpperCase() === "DELIVERED"),
     amazonOrders: selected.filter((order) => order.marketplace === "Amazon").map((order) => ({
@@ -213,3 +273,4 @@ export async function fetchDashboardDataOnServer(
     })),
   };
 }
+

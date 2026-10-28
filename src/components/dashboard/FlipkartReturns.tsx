@@ -23,7 +23,9 @@ export function FlipkartReturns() {
     ...(result?.customerReturns ?? []),
     ...(result?.courierReturns ?? []),
   ]
-    .filter((item) => !expectedToday || (item.source === "courier_return" && item.shipmentStatus.toLowerCase() === "out_for_delivery"))
+    .filter((item) => !expectedToday || (
+      item.source === "courier_return" && item.shipmentStatus.toLowerCase() === "out_for_delivery"
+    ))
     .sort((a, b) => (b.createdDate || b.orderDate).localeCompare(a.createdDate || a.orderDate));
   const orderByItemId = new Map((data?.flipkartOrders ?? []).map((order) => [order.orderItemId, order]));
 
@@ -31,9 +33,13 @@ export function FlipkartReturns() {
     <section className="card-surface overflow-hidden">
       <div className="flex items-center justify-between border-b border-border px-5 py-4">
         <div>
-          <h2 className="text-base font-semibold text-foreground">{expectedToday ? "Flipkart Returns Expected Today" : "Flipkart Returns"}</h2>
+          <h2 className="text-base font-semibold text-foreground">
+            {expectedToday ? "Flipkart Returns Expected Today" : "Flipkart Returns"}
+          </h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            {expectedToday ? `Seller Hub view · Courier returns out for delivery · ${range.start}` : `Customer and courier returns · ${range.start} – ${range.end}`}
+            {expectedToday
+              ? `Seller Hub view · Courier returns out for delivery · ${range.start}`
+              : `Customer and courier returns · ${range.start} – ${range.end}`}
           </p>
         </div>
         <div className="flex items-center gap-3">

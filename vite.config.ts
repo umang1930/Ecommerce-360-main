@@ -14,7 +14,7 @@ export default defineConfig(({ command, mode }) => {
   // Server functions use process.env, so load only their private variables in
   // local development. These values are never added to Vite's client defines.
   if (command === "serve" && !isSpaMode) {
-    const serverEnv = loadEnv(mode, process.cwd(), ["DASHBOARD_", "FLIPKART_", "AMAZON_SP_API_"]);
+    const serverEnv = loadEnv(mode, process.cwd(), ["DASHBOARD_", "GOOGLE_", "AUTH_", "FLIPKART_", "AMAZON_SP_API_"]);
     for (const [key, value] of Object.entries(serverEnv)) {
       process.env[key] ??= value;
     }

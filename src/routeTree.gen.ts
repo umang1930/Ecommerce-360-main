@@ -15,7 +15,13 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ProductPerformanceRouteImport } from './routes/product-performance'
 import { Route as SkuMappingRouteImport } from './routes/sku-mapping'
 import { Route as SyncedOrdersRouteImport } from './routes/synced-orders'
+import { Route as ApiAuthGoogleRouteImport } from './routes/api.auth.google'
+import { Route as ApiAuthLogoutRouteImport } from './routes/api.auth.logout'
+import { Route as ApiAuthSessionRouteImport } from './routes/api.auth.session'
 import { Route as ApiCronSyncOrdersRouteImport } from './routes/api.cron.sync-orders'
+import { Route as ApiAuthGoogleCallbackRouteImport } from './routes/api.auth.google.callback'
+import { Route as ApiAuthPasswordLoginRouteImport } from './routes/api.auth.password.login'
+import { Route as ApiAuthPasswordSetRouteImport } from './routes/api.auth.password.set'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -47,9 +53,39 @@ const SyncedOrdersRoute = SyncedOrdersRouteImport.update({
   path: '/synced-orders',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAuthGoogleRoute = ApiAuthGoogleRouteImport.update({
+  id: '/api/auth/google',
+  path: '/api/auth/google',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthLogoutRoute = ApiAuthLogoutRouteImport.update({
+  id: '/api/auth/logout',
+  path: '/api/auth/logout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthSessionRoute = ApiAuthSessionRouteImport.update({
+  id: '/api/auth/session',
+  path: '/api/auth/session',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCronSyncOrdersRoute = ApiCronSyncOrdersRouteImport.update({
   id: '/api/cron/sync-orders',
   path: '/api/cron/sync-orders',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthGoogleCallbackRoute = ApiAuthGoogleCallbackRouteImport.update({
+  id: '/callback',
+  path: '/callback',
+  getParentRoute: () => ApiAuthGoogleRoute,
+} as any)
+const ApiAuthPasswordLoginRoute = ApiAuthPasswordLoginRouteImport.update({
+  id: '/api/auth/password/login',
+  path: '/api/auth/password/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthPasswordSetRoute = ApiAuthPasswordSetRouteImport.update({
+  id: '/api/auth/password/set',
+  path: '/api/auth/password/set',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -60,7 +96,13 @@ export interface FileRoutesByFullPath {
   '/product-performance': typeof ProductPerformanceRoute
   '/sku-mapping': typeof SkuMappingRoute
   '/synced-orders': typeof SyncedOrdersRoute
+  '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
+  '/api/auth/logout': typeof ApiAuthLogoutRoute
+  '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/cron/sync-orders': typeof ApiCronSyncOrdersRoute
+  '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
+  '/api/auth/password/login': typeof ApiAuthPasswordLoginRoute
+  '/api/auth/password/set': typeof ApiAuthPasswordSetRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -69,7 +111,13 @@ export interface FileRoutesByTo {
   '/product-performance': typeof ProductPerformanceRoute
   '/sku-mapping': typeof SkuMappingRoute
   '/synced-orders': typeof SyncedOrdersRoute
+  '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
+  '/api/auth/logout': typeof ApiAuthLogoutRoute
+  '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/cron/sync-orders': typeof ApiCronSyncOrdersRoute
+  '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
+  '/api/auth/password/login': typeof ApiAuthPasswordLoginRoute
+  '/api/auth/password/set': typeof ApiAuthPasswordSetRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -79,7 +127,13 @@ export interface FileRoutesById {
   '/product-performance': typeof ProductPerformanceRoute
   '/sku-mapping': typeof SkuMappingRoute
   '/synced-orders': typeof SyncedOrdersRoute
+  '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
+  '/api/auth/logout': typeof ApiAuthLogoutRoute
+  '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/cron/sync-orders': typeof ApiCronSyncOrdersRoute
+  '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
+  '/api/auth/password/login': typeof ApiAuthPasswordLoginRoute
+  '/api/auth/password/set': typeof ApiAuthPasswordSetRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -90,7 +144,13 @@ export interface FileRouteTypes {
     | '/product-performance'
     | '/sku-mapping'
     | '/synced-orders'
+    | '/api/auth/google'
+    | '/api/auth/logout'
+    | '/api/auth/session'
     | '/api/cron/sync-orders'
+    | '/api/auth/google/callback'
+    | '/api/auth/password/login'
+    | '/api/auth/password/set'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -99,7 +159,13 @@ export interface FileRouteTypes {
     | '/product-performance'
     | '/sku-mapping'
     | '/synced-orders'
+    | '/api/auth/google'
+    | '/api/auth/logout'
+    | '/api/auth/session'
     | '/api/cron/sync-orders'
+    | '/api/auth/google/callback'
+    | '/api/auth/password/login'
+    | '/api/auth/password/set'
   id:
     | '__root__'
     | '/'
@@ -108,7 +174,13 @@ export interface FileRouteTypes {
     | '/product-performance'
     | '/sku-mapping'
     | '/synced-orders'
+    | '/api/auth/google'
+    | '/api/auth/logout'
+    | '/api/auth/session'
     | '/api/cron/sync-orders'
+    | '/api/auth/google/callback'
+    | '/api/auth/password/login'
+    | '/api/auth/password/set'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -118,7 +190,12 @@ export interface RootRouteChildren {
   ProductPerformanceRoute: typeof ProductPerformanceRoute
   SkuMappingRoute: typeof SkuMappingRoute
   SyncedOrdersRoute: typeof SyncedOrdersRoute
+  ApiAuthGoogleRoute: typeof ApiAuthGoogleRouteWithChildren
+  ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
+  ApiAuthSessionRoute: typeof ApiAuthSessionRoute
   ApiCronSyncOrdersRoute: typeof ApiCronSyncOrdersRoute
+  ApiAuthPasswordLoginRoute: typeof ApiAuthPasswordLoginRoute
+  ApiAuthPasswordSetRoute: typeof ApiAuthPasswordSetRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -165,6 +242,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SyncedOrdersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/auth/google': {
+      id: '/api/auth/google'
+      path: '/api/auth/google'
+      fullPath: '/api/auth/google'
+      preLoaderRoute: typeof ApiAuthGoogleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/logout': {
+      id: '/api/auth/logout'
+      path: '/api/auth/logout'
+      fullPath: '/api/auth/logout'
+      preLoaderRoute: typeof ApiAuthLogoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/session': {
+      id: '/api/auth/session'
+      path: '/api/auth/session'
+      fullPath: '/api/auth/session'
+      preLoaderRoute: typeof ApiAuthSessionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/cron/sync-orders': {
       id: '/api/cron/sync-orders'
       path: '/api/cron/sync-orders'
@@ -172,8 +270,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCronSyncOrdersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/auth/google/callback': {
+      id: '/api/auth/google/callback'
+      path: '/callback'
+      fullPath: '/api/auth/google/callback'
+      preLoaderRoute: typeof ApiAuthGoogleCallbackRouteImport
+      parentRoute: typeof ApiAuthGoogleRoute
+    }
+    '/api/auth/password/login': {
+      id: '/api/auth/password/login'
+      path: '/api/auth/password/login'
+      fullPath: '/api/auth/password/login'
+      preLoaderRoute: typeof ApiAuthPasswordLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/password/set': {
+      id: '/api/auth/password/set'
+      path: '/api/auth/password/set'
+      fullPath: '/api/auth/password/set'
+      preLoaderRoute: typeof ApiAuthPasswordSetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
+
+interface ApiAuthGoogleRouteChildren {
+  ApiAuthGoogleCallbackRoute: typeof ApiAuthGoogleCallbackRoute
+}
+
+const ApiAuthGoogleRouteChildren: ApiAuthGoogleRouteChildren = {
+  ApiAuthGoogleCallbackRoute: ApiAuthGoogleCallbackRoute,
+}
+
+const ApiAuthGoogleRouteWithChildren = ApiAuthGoogleRoute._addFileChildren(
+  ApiAuthGoogleRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -182,7 +313,12 @@ const rootRouteChildren: RootRouteChildren = {
   ProductPerformanceRoute: ProductPerformanceRoute,
   SkuMappingRoute: SkuMappingRoute,
   SyncedOrdersRoute: SyncedOrdersRoute,
+  ApiAuthGoogleRoute: ApiAuthGoogleRouteWithChildren,
+  ApiAuthLogoutRoute: ApiAuthLogoutRoute,
+  ApiAuthSessionRoute: ApiAuthSessionRoute,
   ApiCronSyncOrdersRoute: ApiCronSyncOrdersRoute,
+  ApiAuthPasswordLoginRoute: ApiAuthPasswordLoginRoute,
+  ApiAuthPasswordSetRoute: ApiAuthPasswordSetRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

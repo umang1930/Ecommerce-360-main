@@ -38,18 +38,14 @@ export function AmazonOrders() {
     <section className="card-surface overflow-hidden">
       <div className="flex items-center justify-between border-b border-border px-5 py-4">
         <div>
-          <h2 className="text-base font-semibold text-foreground">Amazon Live Orders</h2>
-          <p className="mt-1 text-xs text-muted-foreground">Amazon India live order items</p>
+          <h2 className="text-base font-semibold text-foreground">Amazon Orders</h2>
+          <p className="mt-1 text-xs text-muted-foreground">Amazon India order items · selected period</p>
         </div>
         <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
           {orders.length} items
         </span>
       </div>
-      {!data?.sourceLabel.includes("Amazon") ? (
-        <p className="px-5 py-8 text-sm text-muted-foreground">
-          Add production Amazon SP-API credentials to the server environment to show live orders.
-        </p>
-      ) : orders.length === 0 ? (
+      {orders.length === 0 ? (
         <p className="px-5 py-8 text-sm text-muted-foreground">
           No Amazon orders found for this date range.
         </p>
