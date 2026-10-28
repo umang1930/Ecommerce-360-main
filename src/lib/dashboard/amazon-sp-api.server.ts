@@ -1,4 +1,3 @@
-import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 const inputSchema = z.object({
@@ -389,22 +388,21 @@ async function listOrders(
 }
 
 /** Server-only: SP-API credentials never cross into the browser or Capacitor bundle. */
-export const fetchAmazonOrders = createServerFn({ method: "POST" })
-  .validator(inputSchema)
-  .handler(async ({ data }): Promise<AmazonOrdersResult> => {
-    try {
-      const seller = data.seller ?? "claspo";
-      const config = getConfig(seller);
-      if (!config) return { configured: false, orders: [] };
-      return {
-        configured: true,
-        orders: await listOrders(config, data.createdAfter, data.createdBefore, seller),
-      };
-    } catch (error) {
-      return {
-        configured: true,
-        orders: [],
-        message: error instanceof Error ? error.message : "Amazon Orders request failed.",
-      };
-    }
-  });
+export async function fetchAmazonOrders(input: { data: unknown }): Promise<AmazonOrdersResult> {
+  const data = inputSchema.parse(input.data);
+  try {
+    const seller = data.seller ?? "claspo";
+    const config = getConfig(seller);
+    if (!config) return { configured: false, orders: [] };
+    return {
+      configured: true,
+      orders: await listOrders(config, data.createdAfter, data.createdBefore, seller),
+    };
+  } catch (error) {
+    return {
+      configured: true,
+      orders: [],
+      message: error instanceof Error ? error.message : "Amazon Orders request failed.",
+    };
+  }
+}

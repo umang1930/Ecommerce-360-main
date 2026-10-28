@@ -1,4 +1,3 @@
-import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import type { FlipkartInventoryResponse, FlipkartInventoryResult, FlipkartReturnsResult, FlipkartReturn } from "./flipkart-types";
 
@@ -182,14 +181,14 @@ async function fetchFlipkartInventory(seller: "claspo" | "monkeyman", skus: stri
 }
 
 /** Fetch the Claspo product listings and stock using the read-only Listings API. */
-export const fetchClaspoFlipkartInventory = createServerFn({ method: "GET" })
-  .handler(async (): Promise<FlipkartInventoryResponse> =>
-    fetchFlipkartInventory("claspo", ["CL-VB-05-2026", "cl-mfc-06-2026", "hk-Hang-01-2026"]));
+export async function fetchClaspoFlipkartInventory(): Promise<FlipkartInventoryResponse> {
+  return fetchFlipkartInventory("claspo", ["CL-VB-05-2026", "cl-mfc-06-2026", "hk-Hang-01-2026"]);
+}
 
 /** Fetch the Monkeyman product listing and stock using the read-only Listings API. */
-export const fetchMonkeymanFlipkartInventory = createServerFn({ method: "GET" })
-  .handler(async (): Promise<FlipkartInventoryResponse> =>
-    fetchFlipkartInventory("monkeyman", ["MM-BELLA-RG", "MM-BELLA-BLK"]));
+export async function fetchMonkeymanFlipkartInventory(): Promise<FlipkartInventoryResponse> {
+  return fetchFlipkartInventory("monkeyman", ["MM-BELLA-RG", "MM-BELLA-BLK"]);
+}
 
 type ApiItem = {
   orderId?: string; orderItemId?: string; shipmentId?: string; status?: string; title?: string;
@@ -579,79 +578,75 @@ async function searchUpcomingOrders(
 }
 
 /** Server-only Flipkart Seller API access. Never expose seller credentials to the browser. */
-export const fetchFlipkartOrders = createServerFn({ method: "POST" })
-  .validator(inputSchema)
-  .handler(async ({ data }): Promise<FlipkartOrdersResult> => {
-    const seller = data.seller ?? "claspo";
-    const config = getConfig(seller);
-    if (!config) return { configured: false, orders: [] };
-    try {
-      const token = await getAccessToken(config);
-      const result = await searchOrders(config, token, data.fromDate, data.toDate, seller);
-      return { configured: true, ...result };
-    } catch (error) {
-      const sellerName = seller === "monkeyman" ? "Monkeyman" : "Claspo";
-      return { configured: true, orders: [], message: `${sellerName} Flipkart ${error instanceof Error ? error.message : "Orders API request failed."}` };
-    }
-  });
+export async function fetchFlipkartOrders(input: { data: unknown }): Promise<FlipkartOrdersResult> {
+  const data = inputSchema.parse(input.data);
+  const seller = data.seller ?? "claspo";
+  const config = getConfig(seller);
+  if (!config) return { configured: false, orders: [] };
+  try {
+    const token = await getAccessToken(config);
+    const result = await searchOrders(config, token, data.fromDate, data.toDate, seller);
+    return { configured: true, ...result };
+  } catch (error) {
+    const sellerName = seller === "monkeyman" ? "Monkeyman" : "Claspo";
+    return { configured: true, orders: [], message: `${sellerName} Flipkart ${error instanceof Error ? error.message : "Orders API request failed."}` };
+  }
+}
 
 /** Server-only delivered-order feed from Flipkart's v3 shipments API. */
-export const fetchFlipkartDeliveredOrders = createServerFn({ method: "POST" })
-  .validator(inputSchema)
-  .handler(async ({ data }): Promise<FlipkartDeliveredOrdersResult> => {
-    const seller = data.seller ?? "claspo";
-    const config = getConfig(seller);
-    if (!config) return { configured: false, orders: [] };
-    try {
-      const token = await getAccessToken(config);
-      return { configured: true, ...(await searchDeliveredOrders(config, token, data.fromDate, data.toDate, seller)) };
-    } catch (error) {
-      const sellerName = seller === "monkeyman" ? "Monkeyman" : "Claspo";
-      return { configured: true, orders: [], message: `${sellerName} Flipkart ${error instanceof Error ? error.message : "Delivered shipments request failed."}` };
-    }
-  });
+export async function fetchFlipkartDeliveredOrders(input: { data: unknown }): Promise<FlipkartDeliveredOrdersResult> {
+  const data = inputSchema.parse(input.data);
+  const seller = data.seller ?? "claspo";
+  const config = getConfig(seller);
+  if (!config) return { configured: false, orders: [] };
+  try {
+    const token = await getAccessToken(config);
+    return { configured: true, ...(await searchDeliveredOrders(config, token, data.fromDate, data.toDate, seller)) };
+  } catch (error) {
+    const sellerName = seller === "monkeyman" ? "Monkeyman" : "Claspo";
+    return { configured: true, orders: [], message: `${sellerName} Flipkart ${error instanceof Error ? error.message : "Delivered shipments request failed."}` };
+  }
+}
 
 /** Server-only Flipkart pre-dispatch orders for the Upcoming Orders dashboard tab. */
-export const fetchFlipkartUpcomingOrders = createServerFn({ method: "POST" })
-  .validator(upcomingInputSchema)
-  .handler(async ({ data }): Promise<FlipkartUpcomingOrdersResult> => {
-    const seller = data.seller ?? "claspo";
-    const config = getConfig(seller);
-    if (!config) return { configured: false, orders: [] };
-    try {
-      const token = await getAccessToken(config);
-      return { configured: true, ...(await searchUpcomingOrders(config, token, seller)) };
-    } catch (error) {
-      const sellerName = seller === "monkeyman" ? "Monkeyman" : "Claspo";
-      return {
-        configured: true,
-        orders: [],
-        message: `${sellerName} Flipkart upcoming orders ${error instanceof Error ? error.message : "request failed."}`,
-      };
-    }
-  });
+export async function fetchFlipkartUpcomingOrders(input: { data: unknown }): Promise<FlipkartUpcomingOrdersResult> {
+  const data = upcomingInputSchema.parse(input.data);
+  const seller = data.seller ?? "claspo";
+  const config = getConfig(seller);
+  if (!config) return { configured: false, orders: [] };
+  try {
+    const token = await getAccessToken(config);
+    return { configured: true, ...(await searchUpcomingOrders(config, token, seller)) };
+  } catch (error) {
+    const sellerName = seller === "monkeyman" ? "Monkeyman" : "Claspo";
+    return {
+      configured: true,
+      orders: [],
+      message: `${sellerName} Flipkart upcoming orders ${error instanceof Error ? error.message : "request failed."}`,
+    };
+  }
+}
 
 /** Server-only Flipkart return feeds. Seller credentials are never sent to the browser. */
-export const fetchFlipkartReturns = createServerFn({ method: "POST" })
-  .validator(inputSchema)
-  .handler(async ({ data }): Promise<FlipkartReturnsResult> => {
-    const config = getConfig(data.seller ?? "claspo");
-    if (!config) return { configured: false, customerReturns: [], courierReturns: [] };
-    try {
-      const token = await getAccessToken(config);
-      const [customer, courier] = await Promise.allSettled([
-        searchReturns(config, token, data.seller ?? "claspo", "customer_return", data.fromDate, data.toDate),
-        searchReturns(config, token, data.seller ?? "claspo", "courier_return", data.fromDate, data.toDate),
-      ]);
-      return {
-        configured: true,
-        customerReturns: customer.status === "fulfilled" ? customer.value : [],
-        courierReturns: courier.status === "fulfilled" ? courier.value : [],
-        ...(customer.status === "rejected" ? { customerError: customer.reason instanceof Error ? customer.reason.message : "Customer returns request failed." } : {}),
-        ...(courier.status === "rejected" ? { courierError: courier.reason instanceof Error ? courier.reason.message : "Courier returns request failed." } : {}),
-      };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Flipkart returns API request failed.";
-      return { configured: true, customerReturns: [], courierReturns: [], customerError: message, courierError: message };
-    }
-  });
+export async function fetchFlipkartReturns(input: { data: unknown }): Promise<FlipkartReturnsResult> {
+  const data = inputSchema.parse(input.data);
+  const config = getConfig(data.seller ?? "claspo");
+  if (!config) return { configured: false, customerReturns: [], courierReturns: [] };
+  try {
+    const token = await getAccessToken(config);
+    const [customer, courier] = await Promise.allSettled([
+      searchReturns(config, token, data.seller ?? "claspo", "customer_return", data.fromDate, data.toDate),
+      searchReturns(config, token, data.seller ?? "claspo", "courier_return", data.fromDate, data.toDate),
+    ]);
+    return {
+      configured: true,
+      customerReturns: customer.status === "fulfilled" ? customer.value : [],
+      courierReturns: courier.status === "fulfilled" ? courier.value : [],
+      ...(customer.status === "rejected" ? { customerError: customer.reason instanceof Error ? customer.reason.message : "Customer returns request failed." } : {}),
+      ...(courier.status === "rejected" ? { courierError: courier.reason instanceof Error ? courier.reason.message : "Courier returns request failed." } : {}),
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Flipkart returns API request failed.";
+    return { configured: true, customerReturns: [], courierReturns: [], customerError: message, courierError: message };
+  }
+}
