@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
+import { BrandLoader } from "./BrandLoader";
 import { useDashboard } from "@/lib/dashboard/filters-context";
 import { formatCurrency, formatNumber, formatPercent } from "@/lib/dashboard/format";
 import type { RankBy } from "@/lib/dashboard/types";
@@ -51,16 +51,28 @@ export function TopProducts() {
       />
 
       {isLoading || !data ? (
-        <div className="mt-5 space-y-2">
-          {[0, 1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-11 w-full rounded-lg" />
-          ))}
-        </div>
+        <BrandLoader message="Loading top products…" className="min-h-56" />
       ) : rows.length === 0 ? (
         <EmptyState />
       ) : (
         <>
-          <div className="mt-4 -mx-2 overflow-x-auto">
+          <div className="mt-4 divide-y divide-border sm:hidden">
+            {rows.map((row) => (
+              <article key={row.sku} className="space-y-2 py-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="line-clamp-2 text-sm font-medium text-foreground" title={row.name}>{row.name}</p>
+                    <p className="mt-1 truncate font-mono text-[11px] text-muted-foreground" title={row.sku}>{row.sku}</p>
+                  </div>
+                  <span className="shrink-0 text-xs text-muted-foreground">{formatPercent(row.contribution)}</span>
+                </div>
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                  <span>{formatNumber(row.orders)} orders</span><span>{formatNumber(row.unitsSold)} units</span><span className="font-semibold text-foreground">{formatCurrency(row.grossSales)}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+          <div className="mt-4 hidden -mx-2 overflow-x-auto sm:block">
             <table className="w-full min-w-[34rem] text-sm">
               <thead>
                 <tr className="text-left text-xs uppercase tracking-wide text-muted-foreground">

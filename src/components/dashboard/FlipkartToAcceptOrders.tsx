@@ -7,6 +7,7 @@ import { canonicalFlipkartSku } from "@/lib/dashboard/brands";
 import { fetchFlipkartUpcomingOrders } from "@/lib/dashboard/flipkart";
 import { OrderStatusBadge } from "./OrderStatusBadge";
 import { ORDERS_PAGE_SIZE, OrdersPagination } from "./OrdersPagination";
+import { BrandLoader } from "./BrandLoader";
 
 function dispatchDay(value: string | null): string | null {
   if (!value) return null;
@@ -127,16 +128,13 @@ export function FlipkartToAcceptOrders() {
             disabled={ordersQuery.isFetching}
             className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-border px-3 text-sm text-foreground hover:bg-muted disabled:opacity-50"
           >
-            <RefreshCw className={`size-4 ${ordersQuery.isFetching ? "animate-spin" : ""}`} />
-            Refresh
+            {ordersQuery.isFetching ? <BrandLoader compact message="Refreshing" /> : <><RefreshCw className="size-4" />Refresh</>}
           </button>
         </div>
       </div>
 
       {ordersQuery.isPending ? (
-        <p className="px-5 py-8 text-sm text-muted-foreground">
-          Loading Flipkart To Accept orders…
-        </p>
+        <BrandLoader message="Loading Flipkart To Accept orders…" />
       ) : ordersQuery.isError ? (
         <p className="px-5 py-8 text-sm text-destructive">
           {ordersQuery.error instanceof Error

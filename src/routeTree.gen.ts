@@ -12,9 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DownloadHistoryRouteImport } from './routes/download-history'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ProductDetailRouteImport } from './routes/product-detail'
 import { Route as ProductPerformanceRouteImport } from './routes/product-performance'
 import { Route as SkuMappingRouteImport } from './routes/sku-mapping'
 import { Route as SyncedOrdersRouteImport } from './routes/synced-orders'
+import { Route as UploadedPdfRouteImport } from './routes/uploaded-pdf'
 import { Route as ApiAuthGoogleRouteImport } from './routes/api.auth.google'
 import { Route as ApiAuthLogoutRouteImport } from './routes/api.auth.logout'
 import { Route as ApiAuthSessionRouteImport } from './routes/api.auth.session'
@@ -38,6 +40,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProductDetailRoute = ProductDetailRouteImport.update({
+  id: '/product-detail',
+  path: '/product-detail',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProductPerformanceRoute = ProductPerformanceRouteImport.update({
   id: '/product-performance',
   path: '/product-performance',
@@ -51,6 +58,11 @@ const SkuMappingRoute = SkuMappingRouteImport.update({
 const SyncedOrdersRoute = SyncedOrdersRouteImport.update({
   id: '/synced-orders',
   path: '/synced-orders',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UploadedPdfRoute = UploadedPdfRouteImport.update({
+  id: '/uploaded-pdf',
+  path: '/uploaded-pdf',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAuthGoogleRoute = ApiAuthGoogleRouteImport.update({
@@ -93,9 +105,11 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/download-history': typeof DownloadHistoryRoute
   '/login': typeof LoginRoute
+  '/product-detail': typeof ProductDetailRoute
   '/product-performance': typeof ProductPerformanceRoute
   '/sku-mapping': typeof SkuMappingRoute
   '/synced-orders': typeof SyncedOrdersRoute
+  '/uploaded-pdf': typeof UploadedPdfRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/auth/session': typeof ApiAuthSessionRoute
@@ -108,9 +122,11 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/download-history': typeof DownloadHistoryRoute
   '/login': typeof LoginRoute
+  '/product-detail': typeof ProductDetailRoute
   '/product-performance': typeof ProductPerformanceRoute
   '/sku-mapping': typeof SkuMappingRoute
   '/synced-orders': typeof SyncedOrdersRoute
+  '/uploaded-pdf': typeof UploadedPdfRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/auth/session': typeof ApiAuthSessionRoute
@@ -124,9 +140,11 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/download-history': typeof DownloadHistoryRoute
   '/login': typeof LoginRoute
+  '/product-detail': typeof ProductDetailRoute
   '/product-performance': typeof ProductPerformanceRoute
   '/sku-mapping': typeof SkuMappingRoute
   '/synced-orders': typeof SyncedOrdersRoute
+  '/uploaded-pdf': typeof UploadedPdfRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/auth/session': typeof ApiAuthSessionRoute
@@ -141,9 +159,11 @@ export interface FileRouteTypes {
     | '/'
     | '/download-history'
     | '/login'
+    | '/product-detail'
     | '/product-performance'
     | '/sku-mapping'
     | '/synced-orders'
+    | '/uploaded-pdf'
     | '/api/auth/google'
     | '/api/auth/logout'
     | '/api/auth/session'
@@ -156,9 +176,11 @@ export interface FileRouteTypes {
     | '/'
     | '/download-history'
     | '/login'
+    | '/product-detail'
     | '/product-performance'
     | '/sku-mapping'
     | '/synced-orders'
+    | '/uploaded-pdf'
     | '/api/auth/google'
     | '/api/auth/logout'
     | '/api/auth/session'
@@ -171,9 +193,11 @@ export interface FileRouteTypes {
     | '/'
     | '/download-history'
     | '/login'
+    | '/product-detail'
     | '/product-performance'
     | '/sku-mapping'
     | '/synced-orders'
+    | '/uploaded-pdf'
     | '/api/auth/google'
     | '/api/auth/logout'
     | '/api/auth/session'
@@ -187,9 +211,11 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DownloadHistoryRoute: typeof DownloadHistoryRoute
   LoginRoute: typeof LoginRoute
+  ProductDetailRoute: typeof ProductDetailRoute
   ProductPerformanceRoute: typeof ProductPerformanceRoute
   SkuMappingRoute: typeof SkuMappingRoute
   SyncedOrdersRoute: typeof SyncedOrdersRoute
+  UploadedPdfRoute: typeof UploadedPdfRoute
   ApiAuthGoogleRoute: typeof ApiAuthGoogleRouteWithChildren
   ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
   ApiAuthSessionRoute: typeof ApiAuthSessionRoute
@@ -221,6 +247,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/product-detail': {
+      id: '/product-detail'
+      path: '/product-detail'
+      fullPath: '/product-detail'
+      preLoaderRoute: typeof ProductDetailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/product-performance': {
       id: '/product-performance'
       path: '/product-performance'
@@ -240,6 +273,13 @@ declare module '@tanstack/react-router' {
       path: '/synced-orders'
       fullPath: '/synced-orders'
       preLoaderRoute: typeof SyncedOrdersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/uploaded-pdf': {
+      id: '/uploaded-pdf'
+      path: '/uploaded-pdf'
+      fullPath: '/uploaded-pdf'
+      preLoaderRoute: typeof UploadedPdfRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/auth/google': {
@@ -310,9 +350,11 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DownloadHistoryRoute: DownloadHistoryRoute,
   LoginRoute: LoginRoute,
+  ProductDetailRoute: ProductDetailRoute,
   ProductPerformanceRoute: ProductPerformanceRoute,
   SkuMappingRoute: SkuMappingRoute,
   SyncedOrdersRoute: SyncedOrdersRoute,
+  UploadedPdfRoute: UploadedPdfRoute,
   ApiAuthGoogleRoute: ApiAuthGoogleRouteWithChildren,
   ApiAuthLogoutRoute: ApiAuthLogoutRoute,
   ApiAuthSessionRoute: ApiAuthSessionRoute,

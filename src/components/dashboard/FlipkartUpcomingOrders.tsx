@@ -7,6 +7,7 @@ import { canonicalFlipkartSku } from "@/lib/dashboard/brands";
 import { fetchFlipkartUpcomingOrders } from "@/lib/dashboard/flipkart";
 import { OrderStatusBadge } from "./OrderStatusBadge";
 import { ORDERS_PAGE_SIZE, OrdersPagination } from "./OrdersPagination";
+import { BrandLoader } from "./BrandLoader";
 
 function dateLabel(value: string | null) {
   if (!value) return "—";
@@ -128,14 +129,13 @@ export function FlipkartUpcomingOrders() {
             disabled={upcomingQuery.isFetching}
             className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-border px-3 text-sm text-foreground hover:bg-muted disabled:opacity-50"
           >
-            <RefreshCw className={`size-4 ${upcomingQuery.isFetching ? "animate-spin" : ""}`} />
-            Refresh
+            {upcomingQuery.isFetching ? <BrandLoader compact message="Refreshing" /> : <><RefreshCw className="size-4" />Refresh</>}
           </button>
         </div>
       </div>
 
       {upcomingQuery.isPending ? (
-        <p className="px-5 py-8 text-sm text-muted-foreground">Loading Flipkart upcoming orders…</p>
+        <BrandLoader message="Loading Flipkart upcoming orders…" />
       ) : upcomingQuery.isError ? (
         <p className="px-5 py-8 text-sm text-destructive">
           {upcomingQuery.error instanceof Error

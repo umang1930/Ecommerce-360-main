@@ -5,6 +5,7 @@ import { fetchAmazonReturns } from "@/lib/dashboard/amazon-returns";
 import { resolveRange } from "@/lib/dashboard/dates";
 import { useDashboard } from "@/lib/dashboard/filters-context";
 import { OrderStatusBadge } from "./OrderStatusBadge";
+import { BrandLoader } from "./BrandLoader";
 
 function dateLabel(value: string) {
   if (!value) return "—";
@@ -79,12 +80,12 @@ export function AmazonReturns() {
         <div className="flex items-center gap-3">
           <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">{returns.length} items</span>
           <button type="button" onClick={() => void returnsQuery.refetch()} disabled={returnsQuery.isFetching} className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-border px-3 text-sm text-foreground hover:bg-muted disabled:opacity-50">
-            <RefreshCw className={`h-4 w-4 ${returnsQuery.isFetching ? "animate-spin" : ""}`} />Refresh
+            {returnsQuery.isFetching ? <BrandLoader compact message="Refreshing" /> : <><RefreshCw className="h-4 w-4" />Refresh</>}
           </button>
         </div>
       </div>
       {returnsQuery.isPending ? (
-        <p className="px-5 py-8 text-sm text-muted-foreground">Loading Amazon returns…</p>
+        <BrandLoader message="Loading Amazon returns…" />
       ) : returnsQuery.isError ? (
         <div className="space-y-3 px-5 py-8">
           <p className="text-sm text-destructive">{returnsQuery.error instanceof Error ? returnsQuery.error.message : "Could not load Amazon returns."}</p>

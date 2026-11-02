@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { ArrowRight, ShieldCheck } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
+import { BrandLoader } from "@/components/dashboard/BrandLoader";
 
 export const Route = createFileRoute("/login")({ component: Login });
 
@@ -120,7 +121,7 @@ function Login() {
               <input type="password" required minLength={12} maxLength={128} autoComplete="new-password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} className="mt-2 block w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/30" />
             </label>
             <button type="submit" disabled={isSubmitting} className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
-              {isSubmitting ? "Saving password…" : "Save dashboard password"}
+              {isSubmitting ? <BrandLoader compact message="Saving password…" /> : "Save dashboard password"}
               {!isSubmitting ? <ArrowRight className="h-4 w-4" /> : null}
             </button>
           </form>
@@ -153,7 +154,7 @@ function Login() {
                 <input type="password" required maxLength={128} autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} className="mt-2 block w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/30" />
               </label>
               <button type="submit" disabled={isSubmitting} className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
-                {isSubmitting ? "Signing in…" : "Sign in with email"}
+                {isSubmitting ? <BrandLoader compact message="Signing in…" /> : "Sign in with email"}
                 {!isSubmitting ? <ArrowRight className="h-4 w-4" /> : null}
               </button>
             </form>

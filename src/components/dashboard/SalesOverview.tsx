@@ -8,7 +8,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Skeleton } from "@/components/ui/skeleton";
+import { BrandLoader } from "./BrandLoader";
 import { cn } from "@/lib/utils";
 import { useDashboard } from "@/lib/dashboard/filters-context";
 import { formatCurrency, formatCurrencyFull, formatNumber } from "@/lib/dashboard/format";
@@ -85,14 +85,14 @@ export function SalesOverview() {
         }
       />
 
-      <div className="mt-5 h-[320px]">
+      <div className="mt-4 h-[230px] sm:mt-5 sm:h-[320px]">
         {isLoading || !data ? (
-          <Skeleton className="size-full rounded-xl" />
+          <BrandLoader message="Loading sales overview…" className="h-full min-h-0 py-2" />
         ) : !hasData ? (
           <EmptyState />
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data.trend} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+            <AreaChart data={data.trend} margin={{ top: 8, right: 4, left: -14, bottom: 0 }}>
               <defs>
                 <linearGradient id="salesFill" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="var(--color-chart-2)" stopOpacity={0.32} />
@@ -110,8 +110,8 @@ export function SalesOverview() {
               <YAxis
                 tickLine={false}
                 axisLine={false}
-                width={64}
-                tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
+                width={56}
+                tick={{ fontSize: 10, fill: "var(--color-muted-foreground)" }}
                 tickFormatter={(value: number) =>
                   metric === "sales" ? formatCurrency(value) : formatNumber(value)
                 }

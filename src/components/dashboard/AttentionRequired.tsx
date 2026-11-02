@@ -1,5 +1,5 @@
 import { AlertTriangle, CheckCircle2, XOctagon } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { BrandLoader } from "./BrandLoader";
 import { useDashboard } from "@/lib/dashboard/filters-context";
 import { SectionHeading } from "./StateBlocks";
 import type { DashboardException } from "@/lib/dashboard/types";
@@ -36,11 +36,7 @@ export function AttentionRequired() {
       <SectionHeading title="Attention Required" subtitle="Data quality and pipeline checks" />
 
       {isLoading || !data ? (
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          {[0, 1, 2].map((i) => (
-            <Skeleton key={i} className="h-20 w-full rounded-lg" />
-          ))}
-        </div>
+        <BrandLoader message="Loading checks…" className="min-h-40" />
       ) : data.exceptions.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-8 text-center">
           <CheckCircle2 className="size-6 text-success" />

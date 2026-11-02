@@ -20,6 +20,7 @@ interface DashboardContextValue {
   applyCustomRange: (start: string, end: string) => void;
   data: DashboardData | undefined;
   isLoading: boolean;
+  isUpdating: boolean;
   isError: boolean;
   errorMessage: string | null;
   refetch: () => void;
@@ -35,6 +36,9 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const query = useQuery({
     queryKey: ["dashboard", appliedFilters],
     queryFn: () => fetchDashboardData(appliedFilters),
+    // Keep the last result visible while a newly selected filter range loads.
+    // This prevents the dashboard from collapsing into loading states on every tap.
+    placeholderData: (previousData) => previousData,
     staleTime: 30_000,
     // A failed Amazon request may be a rate-limit response; don't multiply it
     // into several immediate attempts through React Query's default retries.
@@ -88,7 +92,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         setAppliedFilters(next);
       },
       data: query.data,
-      isLoading: query.isPending || query.isFetching,
+      isLoading: query.isPending && !query.data,
+      isUpdating: query.isFetching && !!query.data,
       isError: query.isError,
       errorMessage: query.error instanceof Error ? query.error.message : null,
       refetch: () => void query.refetch(),
