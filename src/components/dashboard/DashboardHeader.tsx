@@ -12,6 +12,7 @@ import {
 import { SidebarContent } from "./AppSidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { useOptionalDashboard } from "@/lib/dashboard/filters-context";
+import { BrandLoader } from "./BrandLoader";
 
 export function DashboardHeader({
   title = "Dashboard",
@@ -72,14 +73,14 @@ export function DashboardHeader({
                   disabled={!dashboard || dashboard.isLoading}
                   onClick={() => dashboard?.refetch()}
                 >
-                  <RefreshCw className={`size-4 ${dashboard?.isLoading ? "animate-spin" : ""}`} />
+                  {dashboard?.isLoading ? <BrandLoader compact message="Refreshing" /> : <RefreshCw className="size-4" />}
                 </Button>
               </div>
               <DropdownMenuSeparator />
               {!dashboard ? (
                 <p className="px-4 py-5 text-sm text-muted-foreground">Open the Dashboard to view saved order data.</p>
               ) : dashboard.isLoading && !dashboard.data ? (
-                <p className="px-4 py-5 text-sm text-muted-foreground">Loading live marketplace data…</p>
+                <BrandLoader message="Loading live marketplace data…" className="min-h-28" />
               ) : dashboard.isError ? (
                 <div className="px-4 py-4">
                   <p className="text-sm text-destructive">{dashboard.errorMessage || "The dashboard database request failed."}</p>

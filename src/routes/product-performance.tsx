@@ -6,6 +6,7 @@ import { GlobalFilters } from "@/components/dashboard/GlobalFilters";
 import { ProductPerformance } from "@/components/dashboard/ProductPerformance";
 import { useAuth } from "@/hooks/useAuth";
 import { DashboardProvider } from "@/lib/dashboard/filters-context";
+import { BrandLoader } from "@/components/dashboard/BrandLoader";
 
 export const Route = createFileRoute("/product-performance")({
   component: ProductPerformancePage,
@@ -19,7 +20,8 @@ function ProductPerformancePage() {
     if (!isLoading && !isAuthenticated) navigate({ to: "/login" });
   }, [isLoading, isAuthenticated, navigate]);
 
-  if (isLoading || !isAuthenticated) return null;
+  if (isLoading) return <BrandLoader fullScreen message="Checking your sign-in…" />;
+  if (!isAuthenticated) return null;
 
   return (
     <DashboardProvider>

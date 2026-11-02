@@ -6,6 +6,7 @@ import { AppSidebar } from "@/components/dashboard/AppSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { useAuth } from "@/hooks/useAuth";
 import { getSyncedOrders } from "@/lib/dashboard/synced-orders";
+import { BrandLoader } from "@/components/dashboard/BrandLoader";
 
 type MarketplaceFilter = "all" | "Amazon" | "Flipkart";
 type SellerFilter = "all" | "claspo" | "monkeyman";
@@ -28,7 +29,8 @@ function SyncedOrdersPage() {
     if (!isLoading && !isAuthenticated) window.location.assign("/login");
   }, [isLoading, isAuthenticated]);
 
-  if (isLoading || !isAuthenticated) return null;
+  if (isLoading) return <BrandLoader fullScreen message="Checking your sign-in…" />;
+  if (!isAuthenticated) return null;
   const data = query.data;
   const pages = Math.max(1, Math.ceil((data?.total ?? 0) / 50));
   return (
@@ -55,7 +57,7 @@ function SyncedOrdersPage() {
 
           <section className="overflow-hidden rounded-xl border border-border bg-card">
             {query.isError ? <p className="p-6 text-sm text-destructive">Could not load saved orders. Check the server output for database connection details.</p> : null}
-            {query.isLoading ? <p className="p-6 text-sm text-muted-foreground">Loading saved orders…</p> : null}
+            {query.isLoading ? <BrandLoader message="Loading saved orders…" /> : null}
             {!query.isLoading && !query.isError && data?.orders.length === 0 ? <p className="p-8 text-center text-sm text-muted-foreground">No synced orders found. The daily sync runs at 9:00 AM India time.</p> : null}
             {data?.orders.length ? <div className="overflow-x-auto"><table className="w-full min-w-[1050px] text-left text-sm">
               <thead className="border-b border-border bg-muted/40 text-xs uppercase text-muted-foreground"><tr>{["Marketplace", "Brand", "Order date", "Order ID", "SKU / Product", "Status", "Qty", "Total"].map((heading) => <th key={heading} className="px-4 py-3 font-medium">{heading}</th>)}</tr></thead>

@@ -13,6 +13,8 @@ import { useDashboard } from "@/lib/dashboard/filters-context";
 import { resolveRange } from "@/lib/dashboard/dates";
 import { DashboardExport } from "./DashboardExport";
 import type { Brand, Marketplace, PeriodKey } from "@/lib/dashboard/types";
+import { shortProductLabel } from "@/lib/dashboard/product-label";
+import { BrandLoader } from "./BrandLoader";
 
 const PERIODS: { value: PeriodKey; label: string }[] = [
   { value: "today", label: "Today" },
@@ -23,7 +25,7 @@ const PERIODS: { value: PeriodKey; label: string }[] = [
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <label className="flex min-w-[9.5rem] flex-1 flex-col gap-1.5">
+    <label className="flex w-full min-w-0 flex-col gap-1.5 sm:min-w-[9.5rem] sm:flex-1">
       <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
         {label}
       </span>
@@ -33,7 +35,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 export function GlobalFilters({ className = "" }: { className?: string }) {
-  const { filters, setFilter, resetFilters, applyCustomRange, data } = useDashboard();
+  const { filters, setFilter, resetFilters, applyCustomRange, data, isUpdating } = useDashboard();
   const range = resolveRange(filters);
   const [start, setStart] = useState(range.start);
   const [end, setEnd] = useState(range.end);
@@ -63,22 +65,25 @@ export function GlobalFilters({ className = "" }: { className?: string }) {
   }, [filters.period, filters.startDate, filters.endDate, range.start, range.end]);
 
   return (
-    <section className={`card-surface mx-4 mt-5 p-4 sm:mx-6 lg:mx-8 ${className}`}>
+    <section className={`card-surface mx-3 mt-3 p-3 sm:mx-6 sm:mt-5 sm:p-4 lg:mx-8 ${className}`}>
       <div className="mb-3 flex items-center gap-2 text-sm font-medium text-foreground">
         <SlidersHorizontal className="size-4 text-accent" />
         Filters
         {data?.rangeLabel ? (
-          <span className="text-xs font-normal text-muted-foreground">· {data.rangeLabel}</span>
+          <span className="min-w-0 truncate text-xs font-normal text-muted-foreground" title={data.rangeLabel}>· {data.rangeLabel}</span>
         ) : null}
+        <span className="inline-flex min-w-20 justify-end">
+          {isUpdating ? <BrandLoader compact message="Updating…" /> : null}
+        </span>
       </div>
 
-      <div className="flex flex-wrap items-end gap-3">
+      <div className="grid min-w-0 grid-cols-1 gap-3 sm:flex sm:flex-wrap sm:items-end">
         <Field label="Brand">
           <Select
             value={filters.brand}
             onValueChange={(v) => setFilter("brand", v as Brand | "all")}
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-full min-w-0">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -97,7 +102,7 @@ export function GlobalFilters({ className = "" }: { className?: string }) {
             value={filters.marketplace}
             onValueChange={(v) => setFilter("marketplace", v as Marketplace | "all")}
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-full min-w-0">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -125,7 +130,7 @@ export function GlobalFilters({ className = "" }: { className?: string }) {
               }
             }}
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-full min-w-0">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -140,14 +145,23 @@ export function GlobalFilters({ className = "" }: { className?: string }) {
 
         <Field label="Product">
           <Select value={filters.product} onValueChange={(v) => setFilter("product", v)}>
-            <SelectTrigger>
+            <SelectTrigger className="w-full min-w-0">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent
+              className="w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-2rem)]"
+              position="popper"
+              side="bottom"
+              align="start"
+              sideOffset={4}
+              avoidCollisions={false}
+            >
               <SelectItem value="all">All Products</SelectItem>
               {visibleProducts.map((p) => (
-                <SelectItem key={p.sku} value={p.sku}>
-                  {p.name}
+                <SelectItem key={p.sku} value={p.sku} className="max-w-full">
+                  <span className="block w-full truncate" title={p.name}>
+                    {shortProductLabel(p)}
+                  </span>
                 </SelectItem>
               ))}
             </SelectContent>
@@ -171,7 +185,7 @@ export function GlobalFilters({ className = "" }: { className?: string }) {
           </>
         ) : null}
 
-        <Button variant="ghost" onClick={resetFilters} className="text-muted-foreground">
+        <Button variant="ghost" onClick={resetFilters} className="justify-start text-muted-foreground">
           <RotateCcw className="size-4" />
           Reset Filters
         </Button>

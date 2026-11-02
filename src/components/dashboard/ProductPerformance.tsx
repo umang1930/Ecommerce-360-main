@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { useDashboard } from "@/lib/dashboard/filters-context";
 import { formatCurrency, formatNumber, formatPercent } from "@/lib/dashboard/format";
 import type { TopProduct } from "@/lib/dashboard/types";
+import { BrandLoader } from "./BrandLoader";
 
 type SortField = "grossSales" | "orders" | "unitsSold" | "contribution" | "name";
 
@@ -87,7 +88,7 @@ export function ProductPerformance() {
         </div>
 
         {isLoading ? (
-          <p className="px-5 py-8 text-sm text-muted-foreground">Loading product performance…</p>
+          <BrandLoader message="Loading product performance…" />
         ) : isError ? (
           <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-6">
             <p className="text-sm text-destructive">{errorMessage || "Could not load product data."}</p>
@@ -96,7 +97,27 @@ export function ProductPerformance() {
         ) : products.length === 0 ? (
           <p className="px-5 py-8 text-sm text-muted-foreground">{search ? "No products match your search." : "No product sales found for the selected filters."}</p>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          <div className="divide-y divide-border sm:hidden">
+            {products.map((product) => (
+              <article key={product.sku} className="space-y-3 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="line-clamp-2 text-sm font-semibold text-foreground" title={product.name}>{product.name}</p>
+                    <p className="mt-1 truncate font-mono text-[11px] text-muted-foreground" title={product.sku}>{product.sku}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{product.brand}</p>
+                  </div>
+                  <span className="shrink-0 rounded-full bg-secondary px-2 py-1 text-xs font-medium text-foreground">{formatPercent(product.contribution)}</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 border-t border-border pt-3">
+                  <div><p className="text-[11px] text-muted-foreground">Orders</p><p className="mt-1 text-sm font-medium tnum">{formatNumber(product.orders)}</p></div>
+                  <div><p className="text-[11px] text-muted-foreground">Units</p><p className="mt-1 text-sm font-medium tnum">{formatNumber(product.unitsSold)}</p></div>
+                  <div><p className="text-[11px] text-muted-foreground">Gross sales</p><p className="mt-1 text-sm font-semibold tnum">{formatCurrency(product.grossSales)}</p></div>
+                </div>
+              </article>
+            ))}
+          </div>
+          <div className="hidden overflow-x-auto sm:block">
             <table className="w-full min-w-[1000px] table-fixed text-left text-sm">
               <colgroup>
                 <col className="w-[21%]" />
@@ -132,6 +153,7 @@ export function ProductPerformance() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </section>
     </div>

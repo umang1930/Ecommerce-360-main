@@ -6,6 +6,7 @@ import {
   Scale,
   ScrollText,
   Download,
+  FileText,
   Settings,
   ShieldCheck,
   Database,
@@ -46,13 +47,15 @@ export function SidebarContent() {
               ? "bg-sidebar-accent font-semibold text-sidebar-accent-foreground"
               : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
           );
-          if (label === "Dashboard" || label === "SKU Mapping" || label === "Product Performance") {
-            const to = label === "Dashboard" ? "/" : label === "SKU Mapping" ? "/sku-mapping" : "/product-performance";
+          if (label === "Dashboard" || label === "SKU Mapping" || label === "Product Performance" || label === "Product Detail") {
+            const to = label === "Dashboard" ? "/" : label === "SKU Mapping" ? "/sku-mapping" : label === "Product Detail" ? "/product-detail" : "/product-performance";
             const isActive = label === "Dashboard"
               ? active
               : label === "SKU Mapping"
                 ? pathname === "/sku-mapping"
-                : pathname === "/product-performance";
+                : label === "Product Detail"
+                  ? pathname === "/product-detail"
+                  : pathname === "/product-performance";
             return (
               <Link
                 key={label}
@@ -93,6 +96,19 @@ export function SidebarContent() {
         >
           <Download className="size-4 shrink-0" />
           <span className="truncate">Download History</span>
+        </Link>
+        <Link
+          to="/uploaded-pdf"
+          aria-current={pathname === "/uploaded-pdf" ? "page" : undefined}
+          className={cn(
+            "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
+            pathname === "/uploaded-pdf"
+              ? "bg-sidebar-accent font-semibold text-sidebar-accent-foreground"
+              : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
+          )}
+        >
+          <FileText className="size-4 shrink-0" />
+          <span className="truncate">Uploaded PDF</span>
         </Link>
         <Link
           to="/synced-orders"

@@ -3,6 +3,7 @@ import { Search, Save, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useDashboard } from "@/lib/dashboard/filters-context";
+import { BrandLoader } from "./BrandLoader";
 
 interface MappingValue {
   masterSku: string;
@@ -150,7 +151,7 @@ export function SkuMapping() {
         </div>
 
         {isLoading ? (
-          <p className="px-5 py-8 text-sm text-muted-foreground">Loading marketplace order data…</p>
+          <BrandLoader message="Loading marketplace order data…" />
         ) : isError ? (
           <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-6">
             <p className="text-sm text-destructive">{errorMessage || "Could not load order data."}</p>

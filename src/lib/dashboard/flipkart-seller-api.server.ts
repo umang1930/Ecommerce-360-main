@@ -182,12 +182,27 @@ async function fetchFlipkartInventory(seller: "claspo" | "monkeyman", skus: stri
 
 /** Fetch the Claspo product listings and stock using the read-only Listings API. */
 export async function fetchClaspoFlipkartInventory(): Promise<FlipkartInventoryResponse> {
-  return fetchFlipkartInventory("claspo", ["CL-VB-05-2026", "cl-mfc-06-2026", "hk-Hang-01-2026"]);
+  return fetchFlipkartInventory("claspo", [
+    "CL-VB-05-2026",
+    "cl-mfc-06-2026",
+    "hk-Hang-01-2026",
+    "hk-Screw-01-2026",
+    "hk-Screw-01-2026-P20",
+    "hk-Screw-01-2026-P10",
+    "hk-Hang-01-2026-P15",
+    "hk-Hang-01-2026-P20",
+    "hk-Hang-01-2026-P10",
+    "Cl-MFC-072026-fl-kt",
+  ]);
 }
 
 /** Fetch the Monkeyman product listing and stock using the read-only Listings API. */
 export async function fetchMonkeymanFlipkartInventory(): Promise<FlipkartInventoryResponse> {
-  return fetchFlipkartInventory("monkeyman", ["MM-BELLA-RG", "MM-BELLA-BLK"]);
+  return fetchFlipkartInventory("monkeyman", [
+    "MM-BELLA-RG",
+    "MM-BELLA-BLK",
+    "mm-rmpg-03-2025",
+  ]);
 }
 
 type ApiItem = {

@@ -1,5 +1,5 @@
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
-import { Skeleton } from "@/components/ui/skeleton";
+import { BrandLoader } from "./BrandLoader";
 import { useDashboard } from "@/lib/dashboard/filters-context";
 import { formatCurrency, formatNumber, formatPercent } from "@/lib/dashboard/format";
 import { EmptyState, SectionHeading } from "./StateBlocks";
@@ -16,11 +16,7 @@ export function MarketplaceCard() {
       <SectionHeading title="Marketplace Performance" subtitle="Share of gross sales" />
 
       {isLoading || !data ? (
-        <div className="mt-5 space-y-4">
-          <Skeleton className="mx-auto size-40 rounded-full" />
-          <Skeleton className="h-16 w-full rounded-lg" />
-          <Skeleton className="h-16 w-full rounded-lg" />
-        </div>
+        <BrandLoader message="Loading marketplace performance…" className="min-h-64" />
       ) : rows.length === 0 || total === 0 ? (
         <EmptyState />
       ) : (

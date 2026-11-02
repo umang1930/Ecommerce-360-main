@@ -4,6 +4,7 @@ import { AppSidebar } from "@/components/dashboard/AppSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { SkuMapping } from "@/components/dashboard/SkuMapping";
 import { useAuth } from "@/hooks/useAuth";
+import { BrandLoader } from "@/components/dashboard/BrandLoader";
 import { DashboardProvider } from "@/lib/dashboard/filters-context";
 import { useDashboard } from "@/lib/dashboard/filters-context";
 
@@ -19,7 +20,8 @@ function SkuMappingPage() {
     if (!isLoading && !isAuthenticated) navigate({ to: "/login" });
   }, [isLoading, isAuthenticated, navigate]);
 
-  if (isLoading || !isAuthenticated) return null;
+  if (isLoading) return <BrandLoader fullScreen message="Checking your sign-in…" />;
+  if (!isAuthenticated) return null;
 
   return (
     <DashboardProvider>
