@@ -1,4 +1,6 @@
-import { Bell, CheckCircle2, ChevronDown, Menu, RefreshCw, TriangleAlert, LogOut, User } from "lucide-react";
+import { useRef, useState } from "react";
+import { Bell, CheckCircle2, ChevronDown, Menu, RefreshCw, TriangleAlert, LogOut, User, Upload } from "lucide-react";
+import { toast } from "sonner";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +27,71 @@ export function DashboardHeader({
   const exceptions = dashboard?.data?.exceptions ?? [];
   const needsAttention = dashboard?.isError || exceptions.some((exception) => exception.severity === "critical" || exception.severity === "warning");
 
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelected = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Reset input value so re-uploading the same file works
+    event.target.value = "";
+
+    // 1. Validate that it is a valid PDF
+    const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+    if (!isPdf) {
+      toast.error("Invalid file format", {
+        description: "Please select a valid PDF file.",
+      });
+      return;
+    }
+
+    // 2. Automatically transfer PDF to printer integration
+    setIsUploading(true);
+    const toastId = toast.loading("Sending PDF to printer…", {
+      description: `Uploading "${file.name}"`,
+    });
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/print/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = (await response.json()) as { success?: boolean; error?: string; jobId?: string };
+
+      if (!response.ok || !data.success) {
+        toast.dismiss(toastId);
+        toast.error("Print Failed!", {
+          description: data.error
+            ? `Your PDF could not be printed. Please check the printer or try again later. (Error: ${data.error})`
+            : "Your PDF could not be printed. Please check the printer or try again later.",
+        });
+      } else {
+        toast.dismiss(toastId);
+        toast.info("PDF sent to printer", {
+          description: `Job ID: ${data.jobId?.slice(0, 8)}… Printing in progress.`,
+        });
+      }
+    } catch (err) {
+      toast.dismiss(toastId);
+      toast.error("Print Failed!", {
+        description: err instanceof Error
+          ? `Your PDF could not be printed. Please check the printer or try again later. (Error: ${err.message})`
+          : "Your PDF could not be printed. Please check the printer or try again later.",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-background/85 backdrop-blur">
       <div className="flex items-center gap-4 px-4 py-4 sm:px-6 lg:px-8">
@@ -49,6 +116,27 @@ export function DashboardHeader({
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/pdf,.pdf"
+            className="hidden"
+            aria-label="Upload PDF for printing"
+            onChange={handleFileSelected}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-2 text-foreground"
+            disabled={isUploading}
+            onClick={handleUploadClick}
+            aria-label="Upload and print PDF"
+          >
+            <Upload className={`size-4 ${isUploading ? "animate-pulse text-primary" : ""}`} />
+            <span className="hidden sm:inline">{isUploading ? "Sending…" : "Upload PDF"}</span>
+          </Button>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="relative" aria-label="Data sync notifications">

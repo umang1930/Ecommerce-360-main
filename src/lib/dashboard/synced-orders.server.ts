@@ -51,7 +51,7 @@ type QueryResult = {
   affectedRows?: number | undefined;
   insertId?: number | undefined;
 };
-type SqlClient = ((strings: TemplateStringsArray, ...values: unknown[]) => Promise<SqlRows>) & {
+export type SqlClient = ((strings: TemplateStringsArray, ...values: unknown[]) => Promise<SqlRows>) & {
   dialect: "postgres" | "mysql";
   provider: "MariaDB" | "PostgreSQL" | "Local embedded PostgreSQL";
   query: (text: string, params?: unknown[]) => Promise<QueryResult>;
@@ -59,7 +59,7 @@ type SqlClient = ((strings: TemplateStringsArray, ...values: unknown[]) => Promi
 
 let sqlClientPromise: Promise<SqlClient> | undefined;
 
-function getSql(): Promise<SqlClient> {
+export function getSql(): Promise<SqlClient> {
   sqlClientPromise ??= (async () => {
   const connectionString = process.env["DATABASE_URL"] ?? process.env["POSTGRES_URL"] ?? process.env["NEON_DATABASE_URL"];
   let dialect: SqlClient["dialect"];

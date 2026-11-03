@@ -12,6 +12,7 @@ import { type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { AuthProvider } from "../hooks/useAuth";
 import { Toaster } from "sonner";
+import { usePrintNotifications } from "../hooks/usePrintNotifications";
 
 function NotFoundComponent() {
   return (
@@ -127,12 +128,18 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+function PrintNotificationSubscriber() {
+  usePrintNotifications();
+  return null;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <PrintNotificationSubscriber />
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
         <Toaster position="top-center" richColors />

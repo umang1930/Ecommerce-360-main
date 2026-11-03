@@ -19,6 +19,10 @@ import { Route as ApiAuthGoogleRouteImport } from './routes/api.auth.google'
 import { Route as ApiAuthLogoutRouteImport } from './routes/api.auth.logout'
 import { Route as ApiAuthSessionRouteImport } from './routes/api.auth.session'
 import { Route as ApiCronSyncOrdersRouteImport } from './routes/api.cron.sync-orders'
+import { Route as ApiPrintAckRouteImport } from './routes/api.print.ack'
+import { Route as ApiPrintStatusRouteImport } from './routes/api.print.status'
+import { Route as ApiPrintStreamRouteImport } from './routes/api.print.stream'
+import { Route as ApiPrintUploadRouteImport } from './routes/api.print.upload'
 import { Route as ApiAuthGoogleCallbackRouteImport } from './routes/api.auth.google.callback'
 import { Route as ApiAuthPasswordLoginRouteImport } from './routes/api.auth.password.login'
 import { Route as ApiAuthPasswordSetRouteImport } from './routes/api.auth.password.set'
@@ -73,6 +77,26 @@ const ApiCronSyncOrdersRoute = ApiCronSyncOrdersRouteImport.update({
   path: '/api/cron/sync-orders',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPrintAckRoute = ApiPrintAckRouteImport.update({
+  id: '/api/print/ack',
+  path: '/api/print/ack',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPrintStatusRoute = ApiPrintStatusRouteImport.update({
+  id: '/api/print/status',
+  path: '/api/print/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPrintStreamRoute = ApiPrintStreamRouteImport.update({
+  id: '/api/print/stream',
+  path: '/api/print/stream',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPrintUploadRoute = ApiPrintUploadRouteImport.update({
+  id: '/api/print/upload',
+  path: '/api/print/upload',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthGoogleCallbackRoute = ApiAuthGoogleCallbackRouteImport.update({
   id: '/callback',
   path: '/callback',
@@ -100,6 +124,10 @@ export interface FileRoutesByFullPath {
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/cron/sync-orders': typeof ApiCronSyncOrdersRoute
+  '/api/print/ack': typeof ApiPrintAckRoute
+  '/api/print/status': typeof ApiPrintStatusRoute
+  '/api/print/stream': typeof ApiPrintStreamRoute
+  '/api/print/upload': typeof ApiPrintUploadRoute
   '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
   '/api/auth/password/login': typeof ApiAuthPasswordLoginRoute
   '/api/auth/password/set': typeof ApiAuthPasswordSetRoute
@@ -115,6 +143,10 @@ export interface FileRoutesByTo {
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/cron/sync-orders': typeof ApiCronSyncOrdersRoute
+  '/api/print/ack': typeof ApiPrintAckRoute
+  '/api/print/status': typeof ApiPrintStatusRoute
+  '/api/print/stream': typeof ApiPrintStreamRoute
+  '/api/print/upload': typeof ApiPrintUploadRoute
   '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
   '/api/auth/password/login': typeof ApiAuthPasswordLoginRoute
   '/api/auth/password/set': typeof ApiAuthPasswordSetRoute
@@ -131,6 +163,10 @@ export interface FileRoutesById {
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/cron/sync-orders': typeof ApiCronSyncOrdersRoute
+  '/api/print/ack': typeof ApiPrintAckRoute
+  '/api/print/status': typeof ApiPrintStatusRoute
+  '/api/print/stream': typeof ApiPrintStreamRoute
+  '/api/print/upload': typeof ApiPrintUploadRoute
   '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
   '/api/auth/password/login': typeof ApiAuthPasswordLoginRoute
   '/api/auth/password/set': typeof ApiAuthPasswordSetRoute
@@ -148,6 +184,10 @@ export interface FileRouteTypes {
     | '/api/auth/logout'
     | '/api/auth/session'
     | '/api/cron/sync-orders'
+    | '/api/print/ack'
+    | '/api/print/status'
+    | '/api/print/stream'
+    | '/api/print/upload'
     | '/api/auth/google/callback'
     | '/api/auth/password/login'
     | '/api/auth/password/set'
@@ -163,6 +203,10 @@ export interface FileRouteTypes {
     | '/api/auth/logout'
     | '/api/auth/session'
     | '/api/cron/sync-orders'
+    | '/api/print/ack'
+    | '/api/print/status'
+    | '/api/print/stream'
+    | '/api/print/upload'
     | '/api/auth/google/callback'
     | '/api/auth/password/login'
     | '/api/auth/password/set'
@@ -178,6 +222,10 @@ export interface FileRouteTypes {
     | '/api/auth/logout'
     | '/api/auth/session'
     | '/api/cron/sync-orders'
+    | '/api/print/ack'
+    | '/api/print/status'
+    | '/api/print/stream'
+    | '/api/print/upload'
     | '/api/auth/google/callback'
     | '/api/auth/password/login'
     | '/api/auth/password/set'
@@ -194,6 +242,10 @@ export interface RootRouteChildren {
   ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
   ApiAuthSessionRoute: typeof ApiAuthSessionRoute
   ApiCronSyncOrdersRoute: typeof ApiCronSyncOrdersRoute
+  ApiPrintAckRoute: typeof ApiPrintAckRoute
+  ApiPrintStatusRoute: typeof ApiPrintStatusRoute
+  ApiPrintStreamRoute: typeof ApiPrintStreamRoute
+  ApiPrintUploadRoute: typeof ApiPrintUploadRoute
   ApiAuthPasswordLoginRoute: typeof ApiAuthPasswordLoginRoute
   ApiAuthPasswordSetRoute: typeof ApiAuthPasswordSetRoute
 }
@@ -270,6 +322,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCronSyncOrdersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/print/ack': {
+      id: '/api/print/ack'
+      path: '/api/print/ack'
+      fullPath: '/api/print/ack'
+      preLoaderRoute: typeof ApiPrintAckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/print/status': {
+      id: '/api/print/status'
+      path: '/api/print/status'
+      fullPath: '/api/print/status'
+      preLoaderRoute: typeof ApiPrintStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/print/stream': {
+      id: '/api/print/stream'
+      path: '/api/print/stream'
+      fullPath: '/api/print/stream'
+      preLoaderRoute: typeof ApiPrintStreamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/print/upload': {
+      id: '/api/print/upload'
+      path: '/api/print/upload'
+      fullPath: '/api/print/upload'
+      preLoaderRoute: typeof ApiPrintUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/google/callback': {
       id: '/api/auth/google/callback'
       path: '/callback'
@@ -317,6 +397,10 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAuthLogoutRoute: ApiAuthLogoutRoute,
   ApiAuthSessionRoute: ApiAuthSessionRoute,
   ApiCronSyncOrdersRoute: ApiCronSyncOrdersRoute,
+  ApiPrintAckRoute: ApiPrintAckRoute,
+  ApiPrintStatusRoute: ApiPrintStatusRoute,
+  ApiPrintStreamRoute: ApiPrintStreamRoute,
+  ApiPrintUploadRoute: ApiPrintUploadRoute,
   ApiAuthPasswordLoginRoute: ApiAuthPasswordLoginRoute,
   ApiAuthPasswordSetRoute: ApiAuthPasswordSetRoute,
 }
