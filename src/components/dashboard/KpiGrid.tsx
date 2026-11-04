@@ -9,7 +9,7 @@ import {
   ShoppingCart,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { BrandLoader } from "./BrandLoader";
 import { cn } from "@/lib/utils";
 import { useDashboard } from "@/lib/dashboard/filters-context";
 import { formatCurrency, formatNumber, percentChange } from "@/lib/dashboard/format";
@@ -80,17 +80,6 @@ function KpiCard({ icon: Icon, label, value, change, support, action }: KpiCardP
   );
 }
 
-function KpiSkeleton() {
-  return (
-    <div className="card-surface space-y-4 p-5">
-      <Skeleton className="h-4 w-24" />
-      <Skeleton className="h-8 w-28" />
-      <Skeleton className="h-3 w-32" />
-      <Skeleton className="h-3 w-40" />
-    </div>
-  );
-}
-
 function downloadCompletedOrderIds(orders: DashboardData["deliveredFlipkartOrders"]) {
   const rows = [
     ["Order ID", "Order Item ID", "Shipment ID", "Status", "Brand", "SKU", "Product", "Order Date"],
@@ -118,13 +107,7 @@ export function KpiGrid() {
   const { data, filters, isLoading } = useDashboard();
   const showCompletedOrders = filters.marketplace !== "Amazon";
   if (isLoading || !data) {
-    return (
-      <div className={`grid gap-4 sm:grid-cols-2 ${showCompletedOrders ? "xl:grid-cols-5" : "xl:grid-cols-4"}`}>
-        {Array.from({ length: showCompletedOrders ? 5 : 4 }, (_, i) => (
-          <KpiSkeleton key={i} />
-        ))}
-      </div>
-    );
+    return <BrandLoader message="Loading dashboard metrics…" className="card-surface" />;
   }
 
   const { metrics } = data;
@@ -142,7 +125,7 @@ export function KpiGrid() {
     }, new Map<string, (typeof data.deliveredFlipkartOrders)[number]>());
   const completedFlipkartOrders = completedOrderRows.size;
   return (
-    <div className={`grid gap-4 sm:grid-cols-2 ${showCompletedOrders ? "xl:grid-cols-5" : "xl:grid-cols-4"}`}>
+    <div className={`grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 sm:gap-4 ${showCompletedOrders ? "xl:grid-cols-5" : "xl:grid-cols-4"}`}>
       <KpiCard
         icon={ShoppingCart}
         label="Orders"

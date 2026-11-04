@@ -8,6 +8,8 @@ import { addDays, todayIST } from "@/lib/dashboard/dates";
 import { fetchDashboardData } from "@/lib/dashboard/api";
 import { saveDownloadRecord } from "@/lib/dashboard/download-history";
 import { useDashboard } from "@/lib/dashboard/filters-context";
+import { PdfUploadButton } from "./PdfUploadButton";
+import { BrandLoader } from "./BrandLoader";
 
 type ExportRange = "weekly" | "monthly" | "custom";
 
@@ -232,8 +234,9 @@ export function DashboardExport() {
         ) : null}
         <Button onClick={() => void exportData()} disabled={isExporting || (rangeType === "custom" && (!start || !end))}>
           <Download className="size-4" />
-          {isExporting ? "Preparing…" : "Export Excel"}
+          {isExporting ? <BrandLoader compact message="Preparing…" /> : "Export Excel"}
         </Button>
+        <PdfUploadButton />
       </div>
       {error ? <p className="mt-2 text-sm text-destructive">{error}</p> : null}
     </div>

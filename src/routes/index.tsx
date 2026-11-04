@@ -6,10 +6,12 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { GlobalFilters } from "@/components/dashboard/GlobalFilters";
 import { KpiGrid } from "@/components/dashboard/KpiGrid";
 import { SalesOverview } from "@/components/dashboard/SalesOverview";
+import { ProductPerformanceChart } from "@/components/dashboard/ProductPerformanceChart";
 import { MarketplaceCard } from "@/components/dashboard/MarketplaceCard";
 import { TopProducts } from "@/components/dashboard/TopProducts";
 import { AttentionRequired } from "@/components/dashboard/AttentionRequired";
 import { FlipkartOrders } from "@/components/dashboard/FlipkartOrders";
+import { FlipkartCancelledOrders } from "@/components/dashboard/FlipkartCancelledOrders";
 import { FlipkartUpcomingOrders } from "@/components/dashboard/FlipkartUpcomingOrders";
 import { FlipkartToAcceptOrders } from "@/components/dashboard/FlipkartToAcceptOrders";
 import { FlipkartReturns } from "@/components/dashboard/FlipkartReturns";
@@ -19,14 +21,16 @@ import { AmazonOrders } from "@/components/dashboard/AmazonOrders";
 import { ErrorState } from "@/components/dashboard/StateBlocks";
 import { DashboardProvider, useDashboard } from "@/lib/dashboard/filters-context";
 import { cn } from "@/lib/utils";
+import { BrandLoader } from "@/components/dashboard/BrandLoader";
 
-type DashboardTab = "orders" | "inventory" | "returns" | "upcoming" | "to-accept";
+type DashboardTab = "orders" | "inventory" | "returns" | "upcoming" | "to-accept" | "cancelled";
 const DASHBOARD_TABS: { id: DashboardTab; label: string }[] = [
   { id: "orders", label: "Orders" },
   { id: "inventory", label: "Inventory" },
   { id: "returns", label: "Returns" },
   { id: "upcoming", label: "Upcoming Orders" },
   { id: "to-accept", label: "To Accept" },
+  { id: "cancelled", label: "Cancelled Orders" },
 ];
 
 const title = "Founder Dashboard | Ecommerce 360 Command Center";
@@ -106,6 +110,7 @@ function DashboardBody() {
               {activeTab === "orders" ? (
                 <>
                   <SalesOverview />
+                  <ProductPerformanceChart />
                   <AmazonOrders />
                   <FlipkartOrders />
                   <AttentionRequired />
@@ -122,6 +127,8 @@ function DashboardBody() {
                 <FlipkartUpcomingOrders />
               ) : activeTab === "to-accept" ? (
                 <FlipkartToAcceptOrders />
+              ) : activeTab === "cancelled" ? (
+                <FlipkartCancelledOrders />
               ) : (
                 <>
                   <AmazonReturns />
@@ -147,11 +154,7 @@ function DashboardPage() {
   }, [isLoading, isAuthenticated, navigate]);
 
   if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background px-4 text-sm text-muted-foreground" role="status">
-        Checking your sign-in…
-      </div>
-    );
+    return <BrandLoader fullScreen message="Checking your sign-in…" />;
   }
 
   if (!isAuthenticated) {

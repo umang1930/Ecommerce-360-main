@@ -14,8 +14,10 @@ import {
   fetchClaspoFlipkartInventory,
   fetchMonkeymanFlipkartInventory,
 } from "@/lib/dashboard/flipkart";
+import { useDashboard } from "@/lib/dashboard/filters-context";
 import type { FlipkartInventoryResult } from "@/lib/dashboard/flipkart-types";
 import { formatNumber } from "@/lib/dashboard/format";
+import { BrandLoader } from "./BrandLoader";
 
 function money(value: number | undefined, currency = "INR") {
   if (value == null) return "—";
@@ -33,14 +35,14 @@ function ProductNameTick({
 }: {
   x?: number;
   y?: number;
-  payload?: { value?: string };
+  payload?: { value?: string; payload?: { sku?: string } };
 }) {
-  const words = (payload?.value ?? "").split(/\s+/).filter(Boolean);
+  const words = (payload?.payload?.sku ?? payload?.value ?? "").split("-").filter(Boolean);
   const lines: string[] = [];
   let line = "";
   for (const word of words) {
     const candidate = line ? `${line} ${word}` : word;
-    if (candidate.length > 22 && line) {
+    if (candidate.length > 13 && line) {
       lines.push(line);
       line = word;
     } else {
@@ -152,10 +154,18 @@ function InventoryListing({ result }: { result: FlipkartInventoryResult }) {
   );
 }
 
-function InventoryComparison({ listings }: { listings: FlipkartInventoryResult[] }) {
+function InventoryComparison({
+  listings,
+  marketplace,
+}: {
+  listings: FlipkartInventoryResult[];
+  marketplace: string;
+}) {
+  const amazonSelected = marketplace === "Amazon";
   const availableListings = listings.filter((listing) => !listing.unavailable);
   const chartData = availableListings.map((listing) => ({
     productName: listing.productTitle || listing.sku,
+    sku: listing.sku,
     warehouseStock: null as number | null,
     flipkartStock: listing.locations.reduce((total, location) => total + location.inventory, 0),
     amazonStock: null as number | null,
@@ -178,25 +188,37 @@ function InventoryComparison({ listings }: { listings: FlipkartInventoryResult[]
           <p className="mt-1 text-sm font-semibold text-muted-foreground">Not connected</p>
         </div>
         <div className="rounded-lg border border-border p-3">
-          <p className="text-xs text-muted-foreground">Flipkart available stock</p>
+          <p className="text-xs text-muted-foreground">
+            {amazonSelected ? "Amazon available stock" : "Flipkart available stock"}
+          </p>
           <p className="mt-1 text-sm font-semibold text-foreground tnum">
-            {formatNumber(flipkartTotal)} units
+            {amazonSelected ? "Not connected" : `${formatNumber(flipkartTotal)} units`}
           </p>
         </div>
         <div className="rounded-lg border border-border p-3">
-          <p className="text-xs text-muted-foreground">Amazon</p>
-          <p className="mt-1 text-sm font-semibold text-muted-foreground">Not connected</p>
+          <p className="text-xs text-muted-foreground">{amazonSelected ? "Flipkart" : "Amazon"}</p>
+          <p className="mt-1 text-sm font-semibold text-muted-foreground">
+            {amazonSelected ? "Not selected" : "Not connected"}
+          </p>
         </div>
       </div>
 
-      {chartData.length ? (
+      {amazonSelected ? (
+        <p className="py-8 text-sm text-muted-foreground">
+          Amazon inventory is not connected yet, so there is no Amazon stock to chart.
+        </p>
+      ) : chartData.length ? (
         <div className="h-80 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
-              <XAxis dataKey="productName" tick={<ProductNameTick />} interval={0} height={72} />
+              <XAxis dataKey="sku" tick={<ProductNameTick />} interval={0} height={78} />
               <YAxis allowDecimals={false} />
-              <Tooltip />
+              <Tooltip
+                labelFormatter={(label) =>
+                  availableListings.find((listing) => listing.sku === label)?.productTitle || label
+                }
+              />
               <Legend />
               <Bar
                 dataKey="warehouseStock"
@@ -229,14 +251,23 @@ function InventoryComparison({ listings }: { listings: FlipkartInventoryResult[]
 }
 
 export function FlipkartInventory() {
+  const { filters } = useDashboard();
   const inventoryQuery = useQuery({
     queryKey: [
       "flipkart-inventory",
       "CL-VB-05-2026",
       "cl-mfc-06-2026",
       "hk-Hang-01-2026",
+      "hk-Screw-01-2026",
+      "hk-Screw-01-2026-P20",
+      "hk-Screw-01-2026-P10",
+      "hk-Hang-01-2026-P15",
+      "hk-Hang-01-2026-P20",
+      "hk-Hang-01-2026-P10",
+      "Cl-MFC-072026-fl-kt",
       "MM-BELLA-RG",
       "MM-BELLA-BLK",
+      "mm-rmpg-03-2025",
     ],
     queryFn: async () => {
       const [claspo, monkeyman] = await Promise.all([
@@ -250,7 +281,15 @@ export function FlipkartInventory() {
     refetchOnWindowFocus: false,
   });
   const result = inventoryQuery.data;
-  const listings = [...(result?.claspo.listings ?? []), ...(result?.monkeyman.listings ?? [])];
+  const listings = [
+    ...(filters.brand === "all" || filters.brand === "CLASPO"
+      ? result?.claspo.listings ?? []
+      : []),
+    ...(filters.brand === "all" || filters.brand === "MONKEYMAN"
+      ? result?.monkeyman.listings ?? []
+      : []),
+  ].filter((listing) => filters.product === "all" || listing.sku === filters.product);
+  const visibleListings = filters.marketplace === "Amazon" ? [] : listings;
 
   return (
     <section className="card-surface overflow-hidden">
@@ -267,13 +306,12 @@ export function FlipkartInventory() {
           disabled={inventoryQuery.isFetching}
           className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-border px-3 text-sm text-foreground hover:bg-muted disabled:opacity-50"
         >
-          <RefreshCw className={`h-4 w-4 ${inventoryQuery.isFetching ? "animate-spin" : ""}`} />
-          Refresh
+          {inventoryQuery.isFetching ? <BrandLoader compact message="Refreshing" /> : <><RefreshCw className="h-4 w-4" />Refresh</>}
         </button>
       </div>
 
       {inventoryQuery.isPending ? (
-        <p className="px-5 py-8 text-sm text-muted-foreground">Loading Flipkart inventory…</p>
+        <BrandLoader message="Loading Flipkart inventory…" />
       ) : inventoryQuery.isError ? (
         <p className="px-5 py-8 text-sm text-destructive">
           {inventoryQuery.error instanceof Error
@@ -302,8 +340,8 @@ export function FlipkartInventory() {
               Monkeyman: {result.monkeyman.error}
             </p>
           ) : null}
-          <InventoryComparison listings={listings} />
-          {listings.map((listing) => (
+          <InventoryComparison listings={visibleListings} marketplace={filters.marketplace} />
+          {visibleListings.map((listing) => (
             <InventoryListing key={listing.sku} result={listing} />
           ))}
         </>

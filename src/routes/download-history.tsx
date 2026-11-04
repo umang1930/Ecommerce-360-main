@@ -4,6 +4,7 @@ import { AppSidebar } from "@/components/dashboard/AppSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { DownloadHistory } from "@/components/dashboard/DownloadHistory";
 import { useAuth } from "@/hooks/useAuth";
+import { BrandLoader } from "@/components/dashboard/BrandLoader";
 
 export const Route = createFileRoute("/download-history")({
   component: DownloadHistoryPage,
@@ -17,7 +18,8 @@ function DownloadHistoryPage() {
     if (!isLoading && !isAuthenticated) navigate({ to: "/login" });
   }, [isLoading, isAuthenticated, navigate]);
 
-  if (isLoading || !isAuthenticated) return null;
+  if (isLoading) return <BrandLoader fullScreen message="Checking your sign-in…" />;
+  if (!isAuthenticated) return null;
 
   return (
     <div className="flex min-h-screen bg-background">
