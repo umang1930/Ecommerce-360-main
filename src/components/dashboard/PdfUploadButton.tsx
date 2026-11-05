@@ -39,7 +39,6 @@ export function PdfUploadButton() {
           const response = await fetch(current.statusUrl, {
             method: "GET",
             cache: "no-store",
-            headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
           });
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
           const result = await response.json() as {
