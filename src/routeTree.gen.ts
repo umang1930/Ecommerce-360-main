@@ -17,6 +17,7 @@ import { Route as ProductPerformanceRouteImport } from './routes/product-perform
 import { Route as SkuMappingRouteImport } from './routes/sku-mapping'
 import { Route as SyncedOrdersRouteImport } from './routes/synced-orders'
 import { Route as UploadedPdfRouteImport } from './routes/uploaded-pdf'
+import { Route as ApiPrinterStatusRouteImport } from './routes/api.printer-status'
 import { Route as ApiAuthGoogleRouteImport } from './routes/api.auth.google'
 import { Route as ApiAuthLogoutRouteImport } from './routes/api.auth.logout'
 import { Route as ApiAuthSessionRouteImport } from './routes/api.auth.session'
@@ -65,6 +66,11 @@ const UploadedPdfRoute = UploadedPdfRouteImport.update({
   path: '/uploaded-pdf',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPrinterStatusRoute = ApiPrinterStatusRouteImport.update({
+  id: '/api/printer-status',
+  path: '/api/printer-status',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthGoogleRoute = ApiAuthGoogleRouteImport.update({
   id: '/api/auth/google',
   path: '/api/auth/google',
@@ -110,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/sku-mapping': typeof SkuMappingRoute
   '/synced-orders': typeof SyncedOrdersRoute
   '/uploaded-pdf': typeof UploadedPdfRoute
+  '/api/printer-status': typeof ApiPrinterStatusRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/auth/session': typeof ApiAuthSessionRoute
@@ -127,6 +134,7 @@ export interface FileRoutesByTo {
   '/sku-mapping': typeof SkuMappingRoute
   '/synced-orders': typeof SyncedOrdersRoute
   '/uploaded-pdf': typeof UploadedPdfRoute
+  '/api/printer-status': typeof ApiPrinterStatusRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/auth/session': typeof ApiAuthSessionRoute
@@ -145,6 +153,7 @@ export interface FileRoutesById {
   '/sku-mapping': typeof SkuMappingRoute
   '/synced-orders': typeof SyncedOrdersRoute
   '/uploaded-pdf': typeof UploadedPdfRoute
+  '/api/printer-status': typeof ApiPrinterStatusRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/auth/session': typeof ApiAuthSessionRoute
@@ -164,6 +173,7 @@ export interface FileRouteTypes {
     | '/sku-mapping'
     | '/synced-orders'
     | '/uploaded-pdf'
+    | '/api/printer-status'
     | '/api/auth/google'
     | '/api/auth/logout'
     | '/api/auth/session'
@@ -181,6 +191,7 @@ export interface FileRouteTypes {
     | '/sku-mapping'
     | '/synced-orders'
     | '/uploaded-pdf'
+    | '/api/printer-status'
     | '/api/auth/google'
     | '/api/auth/logout'
     | '/api/auth/session'
@@ -198,6 +209,7 @@ export interface FileRouteTypes {
     | '/sku-mapping'
     | '/synced-orders'
     | '/uploaded-pdf'
+    | '/api/printer-status'
     | '/api/auth/google'
     | '/api/auth/logout'
     | '/api/auth/session'
@@ -216,6 +228,7 @@ export interface RootRouteChildren {
   SkuMappingRoute: typeof SkuMappingRoute
   SyncedOrdersRoute: typeof SyncedOrdersRoute
   UploadedPdfRoute: typeof UploadedPdfRoute
+  ApiPrinterStatusRoute: typeof ApiPrinterStatusRoute
   ApiAuthGoogleRoute: typeof ApiAuthGoogleRouteWithChildren
   ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
   ApiAuthSessionRoute: typeof ApiAuthSessionRoute
@@ -280,6 +293,13 @@ declare module '@tanstack/react-router' {
       path: '/uploaded-pdf'
       fullPath: '/uploaded-pdf'
       preLoaderRoute: typeof UploadedPdfRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/printer-status': {
+      id: '/api/printer-status'
+      path: '/api/printer-status'
+      fullPath: '/api/printer-status'
+      preLoaderRoute: typeof ApiPrinterStatusRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/auth/google': {
@@ -355,6 +375,7 @@ const rootRouteChildren: RootRouteChildren = {
   SkuMappingRoute: SkuMappingRoute,
   SyncedOrdersRoute: SyncedOrdersRoute,
   UploadedPdfRoute: UploadedPdfRoute,
+  ApiPrinterStatusRoute: ApiPrinterStatusRoute,
   ApiAuthGoogleRoute: ApiAuthGoogleRouteWithChildren,
   ApiAuthLogoutRoute: ApiAuthLogoutRoute,
   ApiAuthSessionRoute: ApiAuthSessionRoute,

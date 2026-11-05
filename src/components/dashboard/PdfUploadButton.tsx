@@ -128,7 +128,7 @@ export function PdfUploadButton() {
           setJobs((existing) => [...existing, {
             fileName: file.name,
             jobId,
-            statusUrl: getStatusUrl(result?.data?.statusUrl, uploadUrl, jobId),
+            statusUrl: getStatusProxyUrl(result?.data?.statusUrl, jobId),
             status: "QUEUED",
           }]);
         } else {
@@ -198,18 +198,8 @@ function isTerminal(job: PrintJob) {
     job.stage === "PRINT_COMPLETED" || job.stage === "PRINT_FAILED";
 }
 
-function getStatusUrl(statusUrl: string | undefined, baseUrl: string, jobId: string) {
-  const fallback = `${baseUrl}/api/print/jobs/${encodeURIComponent(jobId)}`;
-  if (!statusUrl) return fallback;
-
-  try {
-    const resolved = new URL(statusUrl, baseUrl);
-    // Printer Hub may advertise its bind address, which is not reachable from Vercel browsers.
-    if (["0.0.0.0", "localhost", "127.0.0.1", "::1"].includes(resolved.hostname)) {
-      return `${baseUrl}${resolved.pathname}${resolved.search}`;
-    }
-    return resolved.toString();
-  } catch {
-    return fallback;
-  }
+function getStatusProxyUrl(statusUrl: string | undefined, jobId: string) {
+  const params = new URLSearchParams({ jobId });
+  if (statusUrl) params.set("statusUrl", statusUrl);
+  return `/api/printer-status?${params.toString()}`;
 }
