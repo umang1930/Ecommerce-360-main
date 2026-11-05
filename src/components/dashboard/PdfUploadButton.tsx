@@ -129,7 +129,7 @@ export function PdfUploadButton() {
           setJobs((existing) => [...existing, {
             fileName: file.name,
             jobId,
-            statusUrl: result?.data?.statusUrl || `${uploadUrl}/api/print/jobs/${encodeURIComponent(jobId)}`,
+            statusUrl: getStatusUrl(result?.data?.statusUrl, uploadUrl, jobId),
             status: "QUEUED",
           }]);
         } else {
@@ -138,7 +138,7 @@ export function PdfUploadButton() {
       }
 
       if (invalidNames.length) outcomes.push(`Not valid PDFs: ${invalidNames.join(", ")}.`);
-      setMessage(outcomes.join(" ") || "No valid PDF files selected.");
+      setMessage(outcomes.join(" ") || (validFiles.length ? "PDF uploaded to Printer Hub." : "No valid PDF files selected."));
     } catch (cause) {
       setMessage(cause instanceof Error ? cause.message : "Could not upload the selected PDFs.");
     } finally {
@@ -197,4 +197,20 @@ function getUploadDeviceId() {
 function isTerminal(job: PrintJob) {
   return job.status === "COMPLETED" || job.status === "FAILED" ||
     job.stage === "PRINT_COMPLETED" || job.stage === "PRINT_FAILED";
+}
+
+function getStatusUrl(statusUrl: string | undefined, baseUrl: string, jobId: string) {
+  const fallback = `${baseUrl}/api/print/jobs/${encodeURIComponent(jobId)}`;
+  if (!statusUrl) return fallback;
+
+  try {
+    const resolved = new URL(statusUrl, baseUrl);
+    // Printer Hub may advertise its bind address, which is not reachable from Vercel browsers.
+    if (["0.0.0.0", "localhost", "127.0.0.1", "::1"].includes(resolved.hostname)) {
+      return `${baseUrl}${resolved.pathname}${resolved.search}`;
+    }
+    return resolved.toString();
+  } catch {
+    return fallback;
+  }
 }
