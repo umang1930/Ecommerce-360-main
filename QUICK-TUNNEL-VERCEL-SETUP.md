@@ -17,7 +17,7 @@ This project already polls the Printer Hub for each uploaded PDF's print status.
    vercel link
    ```
 
-   When asked, choose the existing Ecommerce 360 Vercel project. This creates local `.vercel` link metadata; it does not add credentials to the source code.
+   When asked, choose the existing Ecommerce 360 Vercel project. This creates local `.vercel` link metadata (`project.json` or `repo.json`, depending on the CLI version); it does not add credentials to the source code.
 
 3. Confirm `VITE_PRINTER_AUTOMATION_URL` already exists for the **Production** environment in Vercel. The script updates that variable. It uses the Vercel CLI login stored for the same Windows account; do not put an access token in this project.
 
