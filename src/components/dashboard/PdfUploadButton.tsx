@@ -167,15 +167,15 @@ export function PdfUploadButton() {
         const failed = job.status === "FAILED" || job.stage === "PRINT_FAILED";
         const completed = job.status === "COMPLETED" || job.stage === "PRINT_COMPLETED";
         const outOfPaper = failed && /paper.{0,20}(empty|out)|(empty|out).{0,20}paper/i.test(job.errorMessage || "");
-        let statusText = "Print job queued";
+        let statusText = job.status === "QUEUED" ? "Print job queued" : `Print status: ${job.status}`;
         if (job.temporarilyUnavailable) statusText = "Print status temporarily unavailable; retrying";
-        else if (outOfPaper) statusText = "Out of Paper";
-        else if (failed) statusText = "Print Failed";
-        else if (completed) statusText = "Print Completed";
+        else if (outOfPaper) statusText = "Out of Paper!";
+        else if (failed) statusText = "Print Failed!";
+        else if (completed) statusText = "Print Completed!";
         else if (job.stage === "PRINT_JOB_SUBMITTED") statusText = "Sent to printer; confirming print";
         return (
           <p key={job.jobId} role="status" className="max-w-sm text-xs text-muted-foreground">
-            {job.fileName}: {statusText} (job {job.jobId})
+            {statusText}{completed || failed || outOfPaper ? ` — ${job.fileName}` : `: ${job.fileName}`} (job {job.jobId})
             {failed && job.errorMessage ? ` — ${job.errorMessage}` : ""}
           </p>
         );
