@@ -1,12 +1,78 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FileUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BrandLoader } from "./BrandLoader";
+
+type PrintJob = {
+  fileName: string;
+  jobId: string;
+  statusUrl: string;
+  status: string;
+  stage?: string;
+  errorMessage?: string;
+  temporarilyUnavailable?: boolean;
+};
 
 export function PdfUploadButton() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [jobs, setJobs] = useState<PrintJob[]>([]);
+  const jobsRef = useRef(jobs);
+  jobsRef.current = jobs;
+
+  const activeJobsKey = jobs
+    .filter((job) => !isTerminal(job))
+    .map((job) => job.jobId)
+    .join("|");
+
+  useEffect(() => {
+    if (!activeJobsKey) return;
+    let cancelled = false;
+    const timers = new Set<ReturnType<typeof setTimeout>>();
+
+    const poll = async () => {
+      const pendingJobs = jobsRef.current.filter((job) => !isTerminal(job));
+      for (const current of pendingJobs) {
+        if (cancelled) return;
+        try {
+          const response = await fetch(current.statusUrl, {
+            method: "GET",
+            cache: "no-store",
+            headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
+          });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const result = await response.json() as {
+            data?: { job?: { status?: string; stage?: string; errorMessage?: string } };
+          };
+          const job = result.data?.job;
+          if (!job?.status) throw new Error("Missing job status");
+          setJobs((existing) => existing.map((item) => item.jobId === current.jobId ? {
+            ...item,
+            status: job.status!.toUpperCase(),
+            stage: job.stage?.toUpperCase(),
+            errorMessage: job.errorMessage,
+            temporarilyUnavailable: false,
+          } : item));
+        } catch {
+          setJobs((existing) => existing.map((item) => item.jobId === current.jobId
+            ? { ...item, temporarilyUnavailable: true }
+            : item));
+        }
+      }
+      if (!cancelled) {
+        const timer = setTimeout(() => { timers.delete(timer); void poll(); }, 2500);
+        timers.add(timer);
+      }
+    };
+
+    void poll();
+    return () => {
+      cancelled = true;
+      timers.forEach(clearTimeout);
+      timers.clear();
+    };
+  }, [activeJobsKey]);
 
   async function handleFiles(fileList: FileList | null) {
     const files = Array.from(fileList ?? []);
@@ -21,6 +87,7 @@ export function PdfUploadButton() {
 
     setBusy(true);
     setMessage("");
+    setJobs([]);
     try {
       const validFiles: File[] = [];
       const invalidNames: string[] = [];
@@ -41,12 +108,12 @@ export function PdfUploadButton() {
           response = await fetch(`${uploadUrl}/api/pdf/upload`, { method: "POST", body: formData });
         } catch {
           throw new Error(
-            "Could not reach the printer app. Check that it is running on the office PC and the Cloudflare tunnel is open. If both are running, the printer app may need to allow this dashboard address (CORS).",
+            "Could not resolve or connect to the printer app. The configured printer URL may be old or incorrect. Start the printer app and its Cloudflare tunnel, then update VITE_PRINTER_AUTOMATION_URL in the dashboard deployment and redeploy. If the URL opens in a browser but uploads still fail, allow the dashboard origin in the printer app's DASHBOARD_ORIGINS setting.",
           );
         }
         const result = await response.json().catch(() => null) as {
           message?: string;
-          data?: { jobId?: string };
+          data?: { jobId?: string; statusUrl?: string };
         } | null;
 
         if (!response.ok) {
@@ -57,7 +124,17 @@ export function PdfUploadButton() {
           }
           throw new Error(result?.message || `Printer app rejected ${file.name} (HTTP ${response.status}).`);
         }
-        outcomes.push(`${file.name} sent to printer${result?.data?.jobId ? ` (job ${result.data.jobId})` : ""}.`);
+        const jobId = result?.data?.jobId;
+        if (jobId) {
+          setJobs((existing) => [...existing, {
+            fileName: file.name,
+            jobId,
+            statusUrl: result?.data?.statusUrl || `${uploadUrl}/api/print/jobs/${encodeURIComponent(jobId)}`,
+            status: "QUEUED",
+          }]);
+        } else {
+          outcomes.push(`${file.name} sent to printer.`);
+        }
       }
 
       if (invalidNames.length) outcomes.push(`Not valid PDFs: ${invalidNames.join(", ")}.`);
@@ -86,6 +163,23 @@ export function PdfUploadButton() {
         {busy ? <BrandLoader compact message="Uploading…" /> : "Upload PDF"}
       </Button>
       {message ? <p role="status" className="max-w-sm text-xs text-muted-foreground">{message}</p> : null}
+      {jobs.map((job) => {
+        const failed = job.status === "FAILED" || job.stage === "PRINT_FAILED";
+        const completed = job.status === "COMPLETED" || job.stage === "PRINT_COMPLETED";
+        const outOfPaper = failed && /paper.{0,20}(empty|out)|(empty|out).{0,20}paper/i.test(job.errorMessage || "");
+        let statusText = "Print job queued";
+        if (job.temporarilyUnavailable) statusText = "Print status temporarily unavailable; retrying";
+        else if (outOfPaper) statusText = "Out of Paper";
+        else if (failed) statusText = "Print Failed";
+        else if (completed) statusText = "Print Completed";
+        else if (job.stage === "PRINT_JOB_SUBMITTED") statusText = "Sent to printer; confirming print";
+        return (
+          <p key={job.jobId} role="status" className="max-w-sm text-xs text-muted-foreground">
+            {job.fileName}: {statusText} (job {job.jobId})
+            {failed && job.errorMessage ? ` — ${job.errorMessage}` : ""}
+          </p>
+        );
+      })}
     </div>
   );
 }
@@ -98,4 +192,9 @@ function getUploadDeviceId() {
     sessionStorage.setItem(key, id);
   }
   return id;
+}
+
+function isTerminal(job: PrintJob) {
+  return job.status === "COMPLETED" || job.status === "FAILED" ||
+    job.stage === "PRINT_COMPLETED" || job.stage === "PRINT_FAILED";
 }
