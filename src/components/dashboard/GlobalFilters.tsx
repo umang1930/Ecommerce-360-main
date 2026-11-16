@@ -14,6 +14,7 @@ import { resolveRange } from "@/lib/dashboard/dates";
 import { DashboardExport } from "./DashboardExport";
 import type { Brand, Marketplace, PeriodKey } from "@/lib/dashboard/types";
 import { shortProductLabel } from "@/lib/dashboard/product-label";
+import { productImageFor } from "@/lib/dashboard/product-image";
 import { BrandLoader } from "./BrandLoader";
 
 const PERIODS: { value: PeriodKey; label: string }[] = [
@@ -25,12 +26,12 @@ const PERIODS: { value: PeriodKey; label: string }[] = [
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <label className="flex w-full min-w-0 flex-col gap-1.5 sm:min-w-[9.5rem] sm:flex-1">
+    <div className="flex w-full min-w-0 flex-col gap-1.5 sm:min-w-[9.5rem] sm:flex-1">
       <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
         {label}
       </span>
       {children}
-    </label>
+    </div>
   );
 }
 
@@ -77,13 +78,13 @@ export function GlobalFilters({ className = "" }: { className?: string }) {
         </span>
       </div>
 
-      <div className="grid min-w-0 grid-cols-1 gap-3 sm:flex sm:flex-wrap sm:items-end">
+      <div className="grid w-full min-w-0 grid-cols-1 gap-3 min-[480px]:grid-cols-2 sm:flex sm:flex-wrap sm:items-end">
         <Field label="Brand">
           <Select
             value={filters.brand}
             onValueChange={(v) => setFilter("brand", v as Brand | "all")}
           >
-            <SelectTrigger className="w-full min-w-0">
+            <SelectTrigger className="!w-full min-w-0">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -102,7 +103,7 @@ export function GlobalFilters({ className = "" }: { className?: string }) {
             value={filters.marketplace}
             onValueChange={(v) => setFilter("marketplace", v as Marketplace | "all")}
           >
-            <SelectTrigger className="w-full min-w-0">
+            <SelectTrigger className="!w-full min-w-0">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -130,7 +131,7 @@ export function GlobalFilters({ className = "" }: { className?: string }) {
               }
             }}
           >
-            <SelectTrigger className="w-full min-w-0">
+            <SelectTrigger className="!w-full min-w-0">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -145,11 +146,11 @@ export function GlobalFilters({ className = "" }: { className?: string }) {
 
         <Field label="Product">
           <Select value={filters.product} onValueChange={(v) => setFilter("product", v)}>
-            <SelectTrigger className="w-full min-w-0">
+            <SelectTrigger className="!w-full min-w-0">
               <SelectValue />
             </SelectTrigger>
             <SelectContent
-              className="w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-2rem)]"
+              className="w-[var(--radix-select-trigger-width)] max-h-[60dvh] max-w-[calc(100vw-2rem)]"
               position="popper"
               side="bottom"
               align="start"
@@ -159,8 +160,11 @@ export function GlobalFilters({ className = "" }: { className?: string }) {
               <SelectItem value="all">All Products</SelectItem>
               {visibleProducts.map((p) => (
                 <SelectItem key={p.sku} value={p.sku} className="max-w-full">
-                  <span className="block w-full truncate" title={p.name}>
+                  <span className="flex w-full min-w-0 items-center gap-2" title={p.name}>
+                    {productImageFor(p) ? <img src={productImageFor(p)!} alt="" className="size-8 shrink-0 rounded object-contain" /> : null}
+                    <span className="block min-w-0 flex-1 truncate">
                     {shortProductLabel(p)}
+                    </span>
                   </span>
                 </SelectItem>
               ))}

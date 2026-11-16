@@ -47,6 +47,3 @@ src-tauri/WixTools/
 
 # Capacitor generated files
 .capacitor/
-
-.vercel
-.env*

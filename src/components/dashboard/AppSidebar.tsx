@@ -3,7 +3,6 @@ import {
   PackageSearch,
   ScanBarcode,
   Link2,
-  Scale,
   ScrollText,
   Download,
   FileText,
@@ -19,7 +18,6 @@ const NAV = [
   { label: "Product Performance", icon: PackageSearch },
   { label: "Product Detail", icon: ScanBarcode },
   { label: "SKU Mapping", icon: Link2 },
-  { label: "Reconciliation", icon: Scale },
   { label: "Audit Log", icon: ScrollText },
 ];
 

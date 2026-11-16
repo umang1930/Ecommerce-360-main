@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useDashboard } from "@/lib/dashboard/filters-context";
 import { formatCurrency } from "@/lib/dashboard/format";
 import { canonicalFlipkartSku } from "@/lib/dashboard/brands";
+import { shortProductLabel } from "@/lib/dashboard/product-label";
+import { productImageFor } from "@/lib/dashboard/product-image";
 import { OrderStatusBadge } from "./OrderStatusBadge";
 import { ORDERS_PAGE_SIZE, OrdersPagination } from "./OrdersPagination";
 
@@ -30,7 +32,7 @@ export function FlipkartOrders() {
 
   return (
     <section className="card-surface overflow-hidden">
-      <div className="flex items-center justify-between border-b border-border px-5 py-4">
+      <div className="flex flex-col gap-2 border-b border-border px-4 py-4 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between sm:px-5">
         <div>
           <h2 className="text-base font-semibold text-foreground">Flipkart Orders</h2>
           <p className="mt-1 text-xs text-muted-foreground">All statuses · selected period · duplicate order items removed</p>
@@ -40,7 +42,35 @@ export function FlipkartOrders() {
       {orders.length === 0 ? (
         <p className="px-5 py-8 text-sm text-muted-foreground">No Flipkart orders found for this date range.</p>
       ) : (
-        <div className="overflow-x-auto">
+        <>
+        <div className="divide-y divide-border sm:hidden">
+          {visibleOrders.map((order, index) => (
+            <article key={`mobile-${order.orderItemId}-${index}`} className="space-y-3 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0"><p className="break-all text-sm font-semibold text-foreground">{order.orderId || "—"}</p><p className="mt-0.5 text-xs text-muted-foreground">Item {order.orderItemId || "—"}</p></div>
+                <OrderStatusBadge status={order.status} />
+              </div>
+              <div className="flex min-w-0 items-center gap-3">
+                {productImageFor(order) ? (
+                  <>
+                    <img src={productImageFor(order)!} alt="" className="size-12 shrink-0 rounded object-contain" />
+                    <span className="text-sm text-foreground">{shortProductLabel({ name: order.title, sku: order.sku })}</span>
+                  </>
+                ) : (
+                  <p className="min-w-0 text-sm text-foreground">{order.title}</p>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+                <div><span className="text-muted-foreground">Brand</span><p className="mt-0.5 font-medium">{order.brand}</p></div>
+                <div><span className="text-muted-foreground">Quantity</span><p className="mt-0.5 font-medium">{order.quantity}</p></div>
+                <div><span className="text-muted-foreground">Customer price</span><p className="mt-0.5 font-medium">{formatCurrency(order.customerPrice)}</p></div>
+                <div><span className="text-muted-foreground">Order date</span><p className="mt-0.5 font-medium">{dateLabel(order.orderDate)}</p></div>
+                <div><span className="text-muted-foreground">Dispatch by</span><p className="mt-0.5 font-medium">{dateLabel(order.dispatchByDate)}</p></div>
+              </div>
+            </article>
+          ))}
+        </div>
+        <div className="hidden overflow-x-auto sm:block">
           <table className="w-full min-w-[900px] text-left text-sm">
             <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
               <tr>{["Order / Item", "Product", "Brand", "Status", "Qty", "Customer price", "Order date", "Dispatch by"].map((label) => <th key={label} className="px-4 py-3 font-medium">{label}</th>)}</tr>
@@ -49,7 +79,16 @@ export function FlipkartOrders() {
               {visibleOrders.map((order, index) => (
                 <tr key={`${order.orderItemId}-${index}`} className="text-foreground">
                   <td className="px-4 py-3"><div className="font-medium">{order.orderId || "—"}</div><div className="text-xs text-muted-foreground">Item {order.orderItemId || "—"} · Shipment {order.shipmentId || "—"}</div></td>
-                  <td className="max-w-48 truncate px-4 py-3">{order.title}</td>
+                  <td className="px-4 py-2">
+                    {productImageFor(order) ? (
+                      <span className="flex items-center gap-2">
+                        <img src={productImageFor(order)!} alt="" className="size-12 shrink-0 rounded object-contain" />
+                        <span>{shortProductLabel({ name: order.title, sku: order.sku })}</span>
+                      </span>
+                    ) : (
+                      <span className="block max-w-48 truncate">{order.title}</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3">{order.brand}</td>
                   <td className="px-4 py-3"><OrderStatusBadge status={order.status} /></td>
                   <td className="px-4 py-3">{order.quantity}</td>
@@ -60,8 +99,9 @@ export function FlipkartOrders() {
               ))}
             </tbody>
           </table>
-          <OrdersPagination page={currentPage} totalItems={orders.length} onPageChange={setPage} />
         </div>
+        <OrdersPagination page={currentPage} totalItems={orders.length} onPageChange={setPage} />
+        </>
       )}
     </section>
   );

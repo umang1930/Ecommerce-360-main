@@ -18,7 +18,7 @@ export function OrdersPagination({
   const lastItem = Math.min(page * ORDERS_PAGE_SIZE, totalItems);
 
   return (
-    <div className="flex items-center justify-between gap-3 border-t border-border px-5 py-3 text-xs text-muted-foreground">
+    <div className="flex flex-col items-center justify-between gap-3 border-t border-border px-4 py-3 text-xs text-muted-foreground min-[420px]:flex-row sm:px-5">
       <span>Showing {firstItem}–{lastItem} of {totalItems}</span>
       <div className="flex items-center gap-2">
         <button
@@ -27,7 +27,7 @@ export function OrdersPagination({
           disabled={page === 1}
           className="inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-foreground hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
         >
-          <ChevronLeft className="size-3.5" /> Previous
+          <ChevronLeft className="size-3.5" /><span className="hidden min-[420px]:inline">Previous</span>
         </button>
         <span>Page {page} of {pageCount}</span>
         <button
@@ -36,7 +36,7 @@ export function OrdersPagination({
           disabled={page === pageCount}
           className="inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-foreground hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Next <ChevronRight className="size-3.5" />
+          <span className="hidden min-[420px]:inline">Next</span><ChevronRight className="size-3.5" />
         </button>
       </div>
     </div>

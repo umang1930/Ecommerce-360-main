@@ -23,6 +23,8 @@ export interface FlipkartReturn {
   brand: "CLASPO" | "MONKEYMAN";
   returnId: string;
   orderItemId: string;
+  productName?: string;
+  sku?: string;
   source: "customer_return" | "courier_return";
   status: string;
   shipmentStatus: string;

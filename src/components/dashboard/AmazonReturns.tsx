@@ -4,6 +4,8 @@ import { RefreshCw } from "lucide-react";
 import { fetchAmazonReturns } from "@/lib/dashboard/amazon-returns";
 import { resolveRange } from "@/lib/dashboard/dates";
 import { useDashboard } from "@/lib/dashboard/filters-context";
+import { productImageFor } from "@/lib/dashboard/product-image";
+import { shortProductLabel } from "@/lib/dashboard/product-label";
 import { OrderStatusBadge } from "./OrderStatusBadge";
 import { BrandLoader } from "./BrandLoader";
 
@@ -72,12 +74,12 @@ export function AmazonReturns() {
 
   return (
     <section className="card-surface overflow-hidden">
-      <div className="flex items-center justify-between border-b border-border px-5 py-4">
+      <div className="flex flex-col gap-3 border-b border-border px-4 py-4 min-[480px]:flex-row min-[480px]:items-center min-[480px]:justify-between sm:px-5">
         <div>
           <h2 className="text-base font-semibold text-foreground">Amazon Returns</h2>
           <p className="mt-1 text-xs text-muted-foreground">Claspo and Monkeyman Amazon.in returns · {range.start} – {range.end}</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex w-full items-center justify-between gap-3 min-[480px]:w-auto min-[480px]:justify-end">
           <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">{returns.length} items</span>
           <button type="button" onClick={() => void returnsQuery.refetch()} disabled={returnsQuery.isFetching} className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-border px-3 text-sm text-foreground hover:bg-muted disabled:opacity-50">
             {returnsQuery.isFetching ? <BrandLoader compact message="Refreshing" /> : <><RefreshCw className="h-4 w-4" />Refresh</>}
@@ -99,7 +101,34 @@ export function AmazonReturns() {
           {returns.length === 0 ? (
             <p className="px-5 py-8 text-sm text-muted-foreground">{results.some((result) => result.status === "IN_QUEUE" || result.status === "IN_PROGRESS") ? "Amazon is still processing a returns report. Refresh to check again." : "No Amazon returns found for this date range."}</p>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            <div className="divide-y divide-border sm:hidden">
+              {returns.slice(0, 100).map((item, index) => (
+                <article key={`mobile-${item.brand}-${item.returnId}-${item.orderItemId}-${index}`} className="space-y-3 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0"><p className="text-sm font-semibold">{item.brand}</p><p className="mt-0.5 break-all text-xs text-muted-foreground">Return {item.returnId || "—"} · Order item {item.orderItemId || "—"}</p></div>
+                    <OrderStatusBadge status={item.status} />
+                  </div>
+                  <div className="flex min-w-0 items-center gap-3">
+                    {productImageFor({ name: item.productName, sku: item.sku }) ? (
+                      <img src={productImageFor({ name: item.productName, sku: item.sku })!} alt="" className="size-12 shrink-0 rounded object-contain" />
+                    ) : null}
+                    <p className="min-w-0 text-sm">{productImageFor({ name: item.productName, sku: item.sku }) ? shortProductLabel({ name: item.productName, sku: item.sku }) : item.productName || "—"}</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+                    <div><span className="text-muted-foreground">Type</span><p className="mt-0.5 capitalize">{item.source.replace("_", " ")}</p></div>
+                    <div><span className="text-muted-foreground">Quantity</span><p className="mt-0.5">{item.quantity || "—"}</p></div>
+                    <div><span className="text-muted-foreground">SKU</span><p className="mt-0.5 break-all">{item.sku || "—"}</p></div>
+                    <div><span className="text-muted-foreground">ASIN</span><p className="mt-0.5 break-all">{item.asin || "—"}</p></div>
+                    <div><span className="text-muted-foreground">Tracking</span><p className="mt-0.5 break-all">{item.trackingId || "—"}</p></div>
+                    <div><span className="text-muted-foreground">Created</span><p className="mt-0.5">{dateLabel(item.createdDate || item.orderDate)}</p></div>
+                    <div><span className="text-muted-foreground">Expected</span><p className="mt-0.5">{dateLabel(item.expectedDate)}</p></div>
+                  </div>
+                  {item.reason || item.subReason ? <p className="break-words text-xs"><span className="text-muted-foreground">Reason · </span>{[item.reason, item.subReason].filter(Boolean).map(describeReturnReason).join(" · ")}</p> : null}
+                </article>
+              ))}
+            </div>
+            <div className="hidden overflow-x-auto sm:block">
               <table className="w-full min-w-[1150px] text-left text-sm">
                 <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
                   <tr>{["Brand", "Return ID", "Order item", "Type", "Product", "SKU", "ASIN", "Status", "Reason", "Qty", "Tracking", "Created", "Expected"].map((label) => <th key={label} className="px-4 py-3 font-medium">{label}</th>)}</tr>
@@ -111,7 +140,14 @@ export function AmazonReturns() {
                       <td className="px-4 py-3 font-medium">{item.returnId || "—"}</td>
                       <td className="px-4 py-3">{item.orderItemId || "—"}</td>
                       <td className="px-4 py-3 capitalize">{item.source.replace("_", " ")}</td>
-                      <td className="max-w-56 truncate px-4 py-3" title={item.productName}>{item.productName || "—"}</td>
+                      <td className="px-4 py-3" title={item.productName}>
+                        {productImageFor({ name: item.productName, sku: item.sku }) ? (
+                          <span className="flex min-w-40 items-center gap-2">
+                            <img src={productImageFor({ name: item.productName, sku: item.sku })!} alt="" className="size-12 shrink-0 rounded object-contain" />
+                            <span className="max-w-48">{shortProductLabel({ name: item.productName, sku: item.sku })}</span>
+                          </span>
+                        ) : item.productName || "—"}
+                      </td>
                       <td className="px-4 py-3">{item.sku || "—"}</td>
                       <td className="px-4 py-3">{item.asin || "—"}</td>
                       <td className="px-4 py-3"><OrderStatusBadge status={item.status} /></td>
@@ -126,6 +162,7 @@ export function AmazonReturns() {
               </table>
               {returns.length > 100 ? <p className="px-5 py-3 text-xs text-muted-foreground">Showing the latest 100 returns.</p> : null}
             </div>
+            </>
           )}
         </>
       )}

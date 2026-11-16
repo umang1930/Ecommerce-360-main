@@ -215,6 +215,10 @@ type SearchResponse = { orderItems?: ApiItem[]; nextPageURL?: string; nextPageUr
 type ReturnApiItem = Partial<FlipkartReturn> & {
   returnId?: string;
   orderItemId?: string;
+  title?: string;
+  productTitle?: string;
+  productName?: string;
+  sku?: string;
   source?: string;
   status?: string;
   returnStatus?: string;
@@ -264,6 +268,8 @@ async function searchReturns(
       brand: seller === "monkeyman" ? "MONKEYMAN" as const : "CLASPO" as const,
       returnId: item.returnId ?? "",
       orderItemId: item.orderItemId ?? "",
+      productName: item.productName ?? item.productTitle ?? item.title ?? "",
+      sku: item.sku ?? "",
       source,
       status: item.status ?? item.returnStatus ?? data.status ?? "UNKNOWN",
       shipmentStatus: item.shipmentStatus ?? "",
@@ -284,6 +290,37 @@ async function searchReturns(
     if (!nextUrl || data.hasMore === false) break;
   }
   return items;
+}
+
+async function searchProductsByOrderItemIds(config: Config, token: string, orderItemIds: string[]) {
+  const products = new Map<string, { productName: string; sku: string }>();
+  const apiUrl = getOrdersUrl(config.endpoint);
+
+  for (let offset = 0; offset < orderItemIds.length; offset += 100) {
+    const url = new URL("/sellers/v3/shipments", apiUrl.origin);
+    url.searchParams.set("orderItemIds", orderItemIds.slice(offset, offset + 100).join(","));
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    });
+    if (!response.ok) {
+      const details = (await response.text()).replace(/\s+/g, " ").slice(0, 240);
+      throw new Error(`Flipkart product lookup failed (${response.status})${details ? `: ${details}` : ""}`);
+    }
+    const data = await response.json() as {
+      shipments?: { orderItems?: { orderItemId?: string; title?: string; productTitle?: string; sku?: string }[] }[];
+    };
+    for (const shipment of data.shipments ?? []) {
+      for (const item of shipment.orderItems ?? []) {
+        if (!item.orderItemId) continue;
+        products.set(item.orderItemId.trim(), {
+          productName: item.title ?? item.productTitle ?? item.sku ?? "",
+          sku: item.sku ?? "",
+        });
+      }
+    }
+  }
+
+  return products;
 }
 
 async function searchOrders(config: Config, token: string, fromDate: string, toDate: string, seller: "claspo" | "monkeyman"): Promise<{ orders: FlipkartOrder[]; warning?: string }> {
@@ -653,10 +690,27 @@ export async function fetchFlipkartReturns(input: { data: unknown }): Promise<Fl
       searchReturns(config, token, data.seller ?? "claspo", "customer_return", data.fromDate, data.toDate),
       searchReturns(config, token, data.seller ?? "claspo", "courier_return", data.fromDate, data.toDate),
     ]);
+    const customerReturns = customer.status === "fulfilled" ? customer.value : [];
+    const courierReturns = courier.status === "fulfilled" ? courier.value : [];
+    const orderItemIds = [...new Set([...customerReturns, ...courierReturns].map((item) => item.orderItemId.trim()).filter(Boolean))];
+    if (orderItemIds.length > 0) {
+      try {
+        const products = await searchProductsByOrderItemIds(config, token, orderItemIds);
+        for (const item of [...customerReturns, ...courierReturns]) {
+          const product = products.get(item.orderItemId.trim());
+          if (product) {
+            item.productName ||= product.productName;
+            item.sku ||= product.sku;
+          }
+        }
+      } catch (error) {
+        console.warn("[Flipkart Returns] Could not look up product details", error);
+      }
+    }
     return {
       configured: true,
-      customerReturns: customer.status === "fulfilled" ? customer.value : [],
-      courierReturns: courier.status === "fulfilled" ? courier.value : [],
+      customerReturns,
+      courierReturns,
       ...(customer.status === "rejected" ? { customerError: customer.reason instanceof Error ? customer.reason.message : "Customer returns request failed." } : {}),
       ...(courier.status === "rejected" ? { courierError: courier.reason instanceof Error ? courier.reason.message : "Courier returns request failed." } : {}),
     };

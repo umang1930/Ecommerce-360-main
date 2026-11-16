@@ -70,7 +70,7 @@ function DashboardBody() {
   return (
     <>
       <GlobalFilters />
-      <main className="space-y-5 px-4 py-5 sm:px-6 lg:px-8">
+      <main className="min-w-0 space-y-4 px-3 py-4 sm:space-y-5 sm:px-6 sm:py-5 lg:px-8">
         {isError ? (
           <ErrorState onRetry={refetch} message={errorMessage} />
         ) : (

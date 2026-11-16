@@ -28,7 +28,7 @@ interface KpiCardProps {
 function KpiCard({ icon: Icon, label, value, change, support, action }: KpiCardProps) {
   const positive = (change ?? 0) >= 0;
   return (
-    <div className="card-surface group p-5 transition-shadow hover:shadow-[var(--shadow-card-hover)]">
+    <div className="card-surface group min-w-0 p-4 transition-shadow hover:shadow-[var(--shadow-card-hover)] sm:p-5">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <span className="flex size-8 items-center justify-center rounded-lg bg-secondary text-primary">

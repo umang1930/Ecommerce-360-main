@@ -333,6 +333,7 @@ type AmazonOrder = {
     itemId?: string;
     product?: {
       sku?: string;
+      sellerSku?: string;
       title?: string;
       price?: { unitPrice?: { amount?: string; currencyCode?: string } };
     };
@@ -373,10 +374,10 @@ async function listOrders(
       const quantity = item.quantityOrdered ?? 0;
       return {
         orderId: order.orderId ?? "",
-        orderItemId: item.orderItemId ?? item.itemId ?? `${item.product?.sku ?? "item"}-${itemIndex}`,
+        orderItemId: item.orderItemId ?? item.itemId ?? `${item.product?.sellerSku ?? item.product?.sku ?? "item"}-${itemIndex}`,
         status: order.fulfillment?.fulfillmentStatus ?? "Unknown",
-        title: item.product?.title ?? item.product?.sku ?? "Amazon product",
-        sku: item.product?.sku ?? "",
+        title: item.product?.title ?? item.product?.sellerSku ?? item.product?.sku ?? "Amazon product",
+        sku: item.product?.sellerSku ?? item.product?.sku ?? "",
         quantity,
         itemPrice: Number(proceeds?.amount ?? Number(unitPrice?.amount ?? 0) * quantity),
         orderDate: order.createdTime ?? "",
