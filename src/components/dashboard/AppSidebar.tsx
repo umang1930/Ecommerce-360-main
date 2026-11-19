@@ -9,12 +9,14 @@ import {
   Settings,
   ShieldCheck,
   Database,
+  Lightbulb,
 } from "lucide-react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 
 const NAV = [
   { label: "Dashboard", icon: LayoutDashboard, active: true },
+  { label: "Analytics", icon: Lightbulb },
   { label: "Product Performance", icon: PackageSearch },
   { label: "Product Detail", icon: ScanBarcode },
   { label: "SKU Mapping", icon: Link2 },
@@ -45,15 +47,33 @@ export function SidebarContent() {
               ? "bg-sidebar-accent font-semibold text-sidebar-accent-foreground"
               : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
           );
-          if (label === "Dashboard" || label === "SKU Mapping" || label === "Product Performance" || label === "Product Detail") {
-            const to = label === "Dashboard" ? "/" : label === "SKU Mapping" ? "/sku-mapping" : label === "Product Detail" ? "/product-detail" : "/product-performance";
-            const isActive = label === "Dashboard"
-              ? active
-              : label === "SKU Mapping"
-                ? pathname === "/sku-mapping"
-                : label === "Product Detail"
-                  ? pathname === "/product-detail"
-                  : pathname === "/product-performance";
+          if (
+            label === "Dashboard" ||
+            label === "Analytics" ||
+            label === "SKU Mapping" ||
+            label === "Product Performance" ||
+            label === "Product Detail"
+          ) {
+            const to =
+              label === "Dashboard"
+                ? "/"
+                : label === "Analytics"
+                  ? "/analytics"
+                  : label === "SKU Mapping"
+                    ? "/sku-mapping"
+                    : label === "Product Detail"
+                      ? "/product-detail"
+                      : "/product-performance";
+            const isActive =
+              label === "Dashboard"
+                ? active
+                : label === "Analytics"
+                  ? pathname === "/analytics"
+                  : label === "SKU Mapping"
+                    ? pathname === "/sku-mapping"
+                    : label === "Product Detail"
+                      ? pathname === "/product-detail"
+                      : pathname === "/product-performance";
             return (
               <Link
                 key={label}
@@ -72,14 +92,10 @@ export function SidebarContent() {
             );
           }
           return (
-          <button
-            key={label}
-            type="button"
-            className={className}
-          >
-            <Icon className="size-4 shrink-0" />
-            <span className="truncate">{label}</span>
-          </button>
+            <button key={label} type="button" className={className}>
+              <Icon className="size-4 shrink-0" />
+              <span className="truncate">{label}</span>
+            </button>
           );
         })}
         <Link
