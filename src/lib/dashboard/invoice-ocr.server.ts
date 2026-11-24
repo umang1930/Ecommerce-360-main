@@ -1,9 +1,10 @@
 import { createCanvas, loadImage } from "@napi-rs/canvas";
-import { getDocument, type PDFDocumentProxy } from "pdfjs-dist/legacy/build/pdf.mjs";
+import { getDocument, GlobalWorkerOptions, type PDFDocumentProxy } from "pdfjs-dist/legacy/build/pdf.mjs";
 import { mkdir } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { pathToFileURL } from "node:url";
 import { extractInvoiceMetadata, type InvoiceExtraction, type InvoiceReadResult } from "./invoice-ocr";
 
 const OCR_PAGE_LIMIT = 5;
@@ -75,6 +76,10 @@ async function recognizePdf(worker: TesseractWorker, pdf: PDFDocumentProxy): Pro
 
 export async function extractInvoiceOnServer(bytes: Uint8Array, mimeType: string): Promise<InvoiceExtraction> {
   const isImage = mimeType.startsWith("image/");
+  if (!isImage) {
+    const pdfWorkerPath = require.resolve("pdfjs-dist/legacy/build/pdf.worker.mjs");
+    GlobalWorkerOptions.workerSrc = pathToFileURL(pdfWorkerPath).href;
+  }
   const pdf = isImage ? undefined : await getDocument({ data: bytes }).promise;
   let worker: TesseractWorker | undefined;
   try {
