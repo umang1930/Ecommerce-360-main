@@ -21,6 +21,12 @@ export default defineConfig(({ command, mode }) => {
   }
 
   return {
+    // The canvas package contains native platform binaries. Keep it out of
+    // Vite's browser dependency optimizer; the invoice OCR module uses it only
+    // in the Node server runtime.
+    optimizeDeps: {
+      exclude: ["@napi-rs/canvas", "tesseract.js", "pdfjs-dist/legacy/build/pdf.mjs"],
+    },
     plugins: isSpaMode
       ? [react(), tailwindcss(), tsconfigPaths()]
       : [
