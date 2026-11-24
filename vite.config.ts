@@ -39,7 +39,7 @@ export default defineConfig(({ command, mode }) => {
                 includeFiles: [
                   "node_modules/tesseract.js/**",
                   "node_modules/tesseract.js-core/**",
-                  "node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs",
+                  "node_modules/pdfjs-dist/legacy/build/**",
                 ],
                 maxDuration: 60,
               },
