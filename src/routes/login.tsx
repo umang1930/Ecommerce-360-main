@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { ArrowRight, ShieldCheck } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
@@ -24,7 +24,10 @@ function Login() {
   const [setupPassword, setSetupPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { login, isAuthenticated, isLoading } = useAuth();
-  const navigate = useNavigate();
+  const returnTo = (() => {
+    const requested = new URLSearchParams(typeof window === "undefined" ? "" : window.location.search).get("next");
+    return requested?.startsWith("/") && !requested.startsWith("//") ? requested : "/";
+  })();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -40,8 +43,8 @@ function Login() {
   }, []);
 
   useEffect(() => {
-    if (isAuthenticated && !setupPassword) navigate({ to: "/" });
-  }, [isAuthenticated, navigate, setupPassword]);
+    if (isAuthenticated && !setupPassword) window.location.assign(returnTo);
+  }, [isAuthenticated, returnTo, setupPassword]);
 
   const handlePasswordLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -58,7 +61,7 @@ function Login() {
         setAuthError(await responseError(response, "Invalid email or password."));
         return;
       }
-      window.location.assign("/");
+      window.location.assign(returnTo);
     } catch {
       setAuthError("Password login is temporarily unavailable. Please try again.");
     } finally {
@@ -136,7 +139,7 @@ function Login() {
           </div>
         ) : (
           <div className="space-y-5">
-            <button type="button" onClick={() => login()} className="flex w-full items-center justify-center gap-3 rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-800 shadow-sm transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary">
+            <button type="button" onClick={() => login(undefined, returnTo)} className="flex w-full items-center justify-center gap-3 rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-800 shadow-sm transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary">
               <span aria-hidden="true" className="text-lg font-bold text-blue-600">G</span>
               Continue with Google
               <ArrowRight className="h-4 w-4" />

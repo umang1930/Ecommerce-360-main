@@ -237,8 +237,8 @@ function AnalyticsPage() {
             />
           </section>
 
-          <section className="grid items-start gap-5 xl:grid-cols-[1.45fr_1fr]">
-            <article className="rounded-[1.4rem] border border-border bg-card p-5 shadow-sm sm:p-6">
+          <section className="grid items-start gap-5 2xl:grid-cols-[1.45fr_1fr]">
+            <article className="min-w-0 rounded-[1.4rem] border border-border bg-card p-4 shadow-sm sm:p-6">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h2 className="text-lg font-semibold text-foreground">Revenue to settlement</h2>
@@ -313,7 +313,7 @@ function AnalyticsPage() {
               </p>
             </article>
 
-            <article className="rounded-[1.4rem] border border-border bg-card p-5 shadow-sm sm:p-6">
+            <article className="min-w-0 rounded-[1.4rem] border border-border bg-card p-4 shadow-sm sm:p-6">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h2 className="text-lg font-semibold text-foreground">
@@ -351,7 +351,7 @@ function AnalyticsPage() {
             </article>
           </section>
 
-          <section className="rounded-[1.4rem] border border-border bg-card p-5 shadow-sm sm:p-6">
+          <section className="min-w-0 rounded-[1.4rem] border border-border bg-card p-4 shadow-sm sm:p-6">
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
                 <h2 className="text-lg font-semibold text-foreground">Product performance</h2>
@@ -363,7 +363,7 @@ function AnalyticsPage() {
                 <ArrowUpRight className="size-4 text-emerald-600" /> Sales leader: {products[0].sku}
               </p>
             </div>
-            <div className="mt-5 overflow-x-auto">
+            <div className="mt-5 overflow-x-auto overscroll-x-contain">
               <table className="w-full min-w-[650px] text-left text-sm">
                 <thead>
                   <tr className="border-b border-border text-xs text-muted-foreground">

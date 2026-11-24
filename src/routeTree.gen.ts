@@ -12,12 +12,14 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as DownloadHistoryRouteImport } from './routes/download-history'
+import { Route as InvoicesRouteImport } from './routes/invoices'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ProductDetailRouteImport } from './routes/product-detail'
 import { Route as ProductPerformanceRouteImport } from './routes/product-performance'
 import { Route as SkuMappingRouteImport } from './routes/sku-mapping'
 import { Route as SyncedOrdersRouteImport } from './routes/synced-orders'
 import { Route as UploadedPdfRouteImport } from './routes/uploaded-pdf'
+import { Route as ApiInvoicesRouteImport } from './routes/api.invoices'
 import { Route as ApiPrinterStatusRouteImport } from './routes/api.printer-status'
 import { Route as ApiAuthGoogleRouteImport } from './routes/api.auth.google'
 import { Route as ApiAuthLogoutRouteImport } from './routes/api.auth.logout'
@@ -40,6 +42,11 @@ const AnalyticsRoute = AnalyticsRouteImport.update({
 const DownloadHistoryRoute = DownloadHistoryRouteImport.update({
   id: '/download-history',
   path: '/download-history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InvoicesRoute = InvoicesRouteImport.update({
+  id: '/invoices',
+  path: '/invoices',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -70,6 +77,11 @@ const SyncedOrdersRoute = SyncedOrdersRouteImport.update({
 const UploadedPdfRoute = UploadedPdfRouteImport.update({
   id: '/uploaded-pdf',
   path: '/uploaded-pdf',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiInvoicesRoute = ApiInvoicesRouteImport.update({
+  id: '/api/invoices',
+  path: '/api/invoices',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPrinterStatusRoute = ApiPrinterStatusRouteImport.update({
@@ -117,12 +129,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
   '/download-history': typeof DownloadHistoryRoute
+  '/invoices': typeof InvoicesRoute
   '/login': typeof LoginRoute
   '/product-detail': typeof ProductDetailRoute
   '/product-performance': typeof ProductPerformanceRoute
   '/sku-mapping': typeof SkuMappingRoute
   '/synced-orders': typeof SyncedOrdersRoute
   '/uploaded-pdf': typeof UploadedPdfRoute
+  '/api/invoices': typeof ApiInvoicesRoute
   '/api/printer-status': typeof ApiPrinterStatusRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
@@ -136,12 +150,14 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
   '/download-history': typeof DownloadHistoryRoute
+  '/invoices': typeof InvoicesRoute
   '/login': typeof LoginRoute
   '/product-detail': typeof ProductDetailRoute
   '/product-performance': typeof ProductPerformanceRoute
   '/sku-mapping': typeof SkuMappingRoute
   '/synced-orders': typeof SyncedOrdersRoute
   '/uploaded-pdf': typeof UploadedPdfRoute
+  '/api/invoices': typeof ApiInvoicesRoute
   '/api/printer-status': typeof ApiPrinterStatusRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
@@ -156,12 +172,14 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
   '/download-history': typeof DownloadHistoryRoute
+  '/invoices': typeof InvoicesRoute
   '/login': typeof LoginRoute
   '/product-detail': typeof ProductDetailRoute
   '/product-performance': typeof ProductPerformanceRoute
   '/sku-mapping': typeof SkuMappingRoute
   '/synced-orders': typeof SyncedOrdersRoute
   '/uploaded-pdf': typeof UploadedPdfRoute
+  '/api/invoices': typeof ApiInvoicesRoute
   '/api/printer-status': typeof ApiPrinterStatusRoute
   '/api/auth/google': typeof ApiAuthGoogleRouteWithChildren
   '/api/auth/logout': typeof ApiAuthLogoutRoute
@@ -177,12 +195,14 @@ export interface FileRouteTypes {
     | '/'
     | '/analytics'
     | '/download-history'
+    | '/invoices'
     | '/login'
     | '/product-detail'
     | '/product-performance'
     | '/sku-mapping'
     | '/synced-orders'
     | '/uploaded-pdf'
+    | '/api/invoices'
     | '/api/printer-status'
     | '/api/auth/google'
     | '/api/auth/logout'
@@ -196,12 +216,14 @@ export interface FileRouteTypes {
     | '/'
     | '/analytics'
     | '/download-history'
+    | '/invoices'
     | '/login'
     | '/product-detail'
     | '/product-performance'
     | '/sku-mapping'
     | '/synced-orders'
     | '/uploaded-pdf'
+    | '/api/invoices'
     | '/api/printer-status'
     | '/api/auth/google'
     | '/api/auth/logout'
@@ -215,12 +237,14 @@ export interface FileRouteTypes {
     | '/'
     | '/analytics'
     | '/download-history'
+    | '/invoices'
     | '/login'
     | '/product-detail'
     | '/product-performance'
     | '/sku-mapping'
     | '/synced-orders'
     | '/uploaded-pdf'
+    | '/api/invoices'
     | '/api/printer-status'
     | '/api/auth/google'
     | '/api/auth/logout'
@@ -235,12 +259,14 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AnalyticsRoute: typeof AnalyticsRoute
   DownloadHistoryRoute: typeof DownloadHistoryRoute
+  InvoicesRoute: typeof InvoicesRoute
   LoginRoute: typeof LoginRoute
   ProductDetailRoute: typeof ProductDetailRoute
   ProductPerformanceRoute: typeof ProductPerformanceRoute
   SkuMappingRoute: typeof SkuMappingRoute
   SyncedOrdersRoute: typeof SyncedOrdersRoute
   UploadedPdfRoute: typeof UploadedPdfRoute
+  ApiInvoicesRoute: typeof ApiInvoicesRoute
   ApiPrinterStatusRoute: typeof ApiPrinterStatusRoute
   ApiAuthGoogleRoute: typeof ApiAuthGoogleRouteWithChildren
   ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
@@ -271,6 +297,13 @@ declare module '@tanstack/react-router' {
       path: '/download-history'
       fullPath: '/download-history'
       preLoaderRoute: typeof DownloadHistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/invoices': {
+      id: '/invoices'
+      path: '/invoices'
+      fullPath: '/invoices'
+      preLoaderRoute: typeof InvoicesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -313,6 +346,13 @@ declare module '@tanstack/react-router' {
       path: '/uploaded-pdf'
       fullPath: '/uploaded-pdf'
       preLoaderRoute: typeof UploadedPdfRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/invoices': {
+      id: '/api/invoices'
+      path: '/api/invoices'
+      fullPath: '/api/invoices'
+      preLoaderRoute: typeof ApiInvoicesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/printer-status': {
@@ -390,12 +430,14 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnalyticsRoute: AnalyticsRoute,
   DownloadHistoryRoute: DownloadHistoryRoute,
+  InvoicesRoute: InvoicesRoute,
   LoginRoute: LoginRoute,
   ProductDetailRoute: ProductDetailRoute,
   ProductPerformanceRoute: ProductPerformanceRoute,
   SkuMappingRoute: SkuMappingRoute,
   SyncedOrdersRoute: SyncedOrdersRoute,
   UploadedPdfRoute: UploadedPdfRoute,
+  ApiInvoicesRoute: ApiInvoicesRoute,
   ApiPrinterStatusRoute: ApiPrinterStatusRoute,
   ApiAuthGoogleRoute: ApiAuthGoogleRouteWithChildren,
   ApiAuthLogoutRoute: ApiAuthLogoutRoute,

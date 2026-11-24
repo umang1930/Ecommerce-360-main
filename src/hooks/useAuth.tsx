@@ -10,7 +10,7 @@ interface User {
 interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
-  login: (intent?: "set-password") => void;
+  login: (intent?: "set-password", returnTo?: string) => void;
   logout: () => Promise<void>;
   isLoading: boolean;
 }
@@ -42,9 +42,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => { active = false; };
   }, []);
 
-  const login = (intent?: "set-password") => window.location.assign(
-    intent === "set-password" ? "/api/auth/google?intent=set-password" : "/api/auth/google",
-  );
+  const login = (intent?: "set-password", returnTo?: string) => {
+    const params = new URLSearchParams();
+    if (intent === "set-password") params.set("intent", "set-password");
+    if (returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//")) params.set("next", returnTo);
+    const query = params.toString();
+    window.location.assign(`/api/auth/google${query ? `?${query}` : ""}`);
+  };
 
   const logout = async () => {
     try {

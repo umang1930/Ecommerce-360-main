@@ -169,7 +169,12 @@ export function beginGoogleLogin(request: Request) {
   }
 
   const state = randomBytes(32).toString("base64url");
-  const intent = new URL(request.url).searchParams.get("intent") === "set-password" ? "set-password" : "login";
+  const loginUrl = new URL(request.url);
+  const intent = loginUrl.searchParams.get("intent") === "set-password" ? "set-password" : "login";
+  const requestedReturnTo = loginUrl.searchParams.get("next") ?? "/";
+  const returnTo = requestedReturnTo.startsWith("/") && !requestedReturnTo.startsWith("//")
+    ? requestedReturnTo
+    : "/";
   const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
   url.search = new URLSearchParams({
     client_id: clientId,
@@ -183,7 +188,7 @@ export function beginGoogleLogin(request: Request) {
     status: 302,
     headers: {
       location: url.toString(),
-      "set-cookie": `${STATE_COOKIE}=${state}.${intent}; ${cookieOptions(request, STATE_MAX_AGE_SECONDS)}`,
+      "set-cookie": `${STATE_COOKIE}=${state}.${intent}.${Buffer.from(returnTo).toString("base64url")}; ${cookieOptions(request, STATE_MAX_AGE_SECONDS)}`,
     },
   });
 }
@@ -192,7 +197,7 @@ export async function completeGoogleLogin(request: Request) {
   const requestUrl = new URL(request.url);
   const state = requestUrl.searchParams.get("state");
   const storedStateValue = cookieValue(request, STATE_COOKIE);
-  const [storedState, intent = "login"] = storedStateValue?.split(".") ?? [];
+  const [storedState, intent = "login", encodedReturnTo] = storedStateValue?.split(".") ?? [];
   if (!state || !storedState || !equalSignatures(state, storedState)) return loginFailure(request, "failed");
   if (requestUrl.searchParams.has("error")) return loginFailure(request, "denied");
 
@@ -220,7 +225,13 @@ export async function completeGoogleLogin(request: Request) {
 
     const identity = await verifyGoogleIdToken(tokens.id_token);
     await recordDashboardGoogleUser(identity);
-    const destination = intent === "set-password" ? "/login?setupPassword=1" : "/";
+    const requestedReturnTo = encodedReturnTo
+      ? Buffer.from(encodedReturnTo, "base64url").toString("utf8")
+      : "/";
+    const returnTo = requestedReturnTo.startsWith("/") && !requestedReturnTo.startsWith("//")
+      ? requestedReturnTo
+      : "/";
+    const destination = intent === "set-password" ? "/login?setupPassword=1" : returnTo;
     const headers = new Headers({ location: new URL(destination, request.url).toString() });
     headers.append("set-cookie", createDashboardSessionCookie(request, identity));
     headers.append("set-cookie", `${STATE_COOKIE}=; ${clearCookieOptions(request)}`);

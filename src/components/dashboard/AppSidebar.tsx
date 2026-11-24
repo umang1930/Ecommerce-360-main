@@ -6,6 +6,7 @@ import {
   ScrollText,
   Download,
   FileText,
+  ReceiptText,
   Settings,
   ShieldCheck,
   Database,
@@ -123,6 +124,19 @@ export function SidebarContent() {
         >
           <FileText className="size-4 shrink-0" />
           <span className="truncate">Uploaded PDF</span>
+        </Link>
+        <Link
+          to="/invoices"
+          aria-current={pathname === "/invoices" ? "page" : undefined}
+          className={cn(
+            "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
+            pathname === "/invoices"
+              ? "bg-sidebar-accent font-semibold text-sidebar-accent-foreground"
+              : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
+          )}
+        >
+          <ReceiptText className="size-4 shrink-0" />
+          <span className="truncate">Invoices</span>
         </Link>
         <Link
           to="/synced-orders"

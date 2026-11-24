@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Download, ExternalLink, FileText, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { deleteUploadedPdf, listUploadedPdfs, type UploadedPdf } from "@/lib/dashboard/uploaded-pdfs";
+import { deleteUploadedPdf, getUploadedPdf, listUploadedPdfs, type UploadedPdf } from "@/lib/dashboard/uploaded-pdfs";
 import { BrandLoader } from "./BrandLoader";
 
 function fileSize(bytes: number) {
@@ -40,17 +40,22 @@ export function UploadedPdfs() {
     }
   }
 
-  function openPdf(file: UploadedPdf, download: boolean) {
-    const url = URL.createObjectURL(file.file);
-    const link = document.createElement("a");
-    link.href = url;
-    if (download) link.download = file.name;
-    else {
-      link.target = "_blank";
-      link.rel = "noreferrer";
+  async function openPdf(file: UploadedPdf, download: boolean) {
+    try {
+      const blob = await getUploadedPdf(file.id);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      if (download) link.download = file.name;
+      else {
+        link.target = "_blank";
+        link.rel = "noreferrer";
+      }
+      link.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Could not open this PDF.");
     }
-    link.click();
-    window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
   }
 
   return (
@@ -58,7 +63,7 @@ export function UploadedPdfs() {
       <div className="flex items-center justify-between border-b border-border px-5 py-4">
         <div>
           <h2 className="text-base font-semibold text-foreground">Uploaded PDF files</h2>
-          <p className="mt-1 text-xs text-muted-foreground">PDF files saved in this browser · {files.length} files</p>
+          <p className="mt-1 text-xs text-muted-foreground">Shared PDF files · {files.length} files</p>
         </div>
         <Button type="button" variant="outline" onClick={() => void refresh()}>Refresh</Button>
       </div>
