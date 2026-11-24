@@ -34,6 +34,7 @@ export default defineConfig(({ command, mode }) => {
           ...(command === "build" ? [nitro({
             preset: "vercel",
             renderer: false,
+            traceDeps: ["tesseract.js*", "tesseract.js-core*", "!@napi-rs/canvas-win32-x64-msvc"],
             vercel: {
               functions: {
                 includeFiles: [
