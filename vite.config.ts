@@ -36,7 +36,11 @@ export default defineConfig(({ command, mode }) => {
             renderer: false,
             vercel: {
               functions: {
-                includeFiles: ["node_modules/tesseract.js/**", "node_modules/tesseract.js-core/**"],
+                includeFiles: [
+                  "node_modules/tesseract.js/**",
+                  "node_modules/tesseract.js-core/**",
+                  "node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs",
+                ],
                 maxDuration: 60,
               },
             },
