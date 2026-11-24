@@ -32,12 +32,31 @@ export interface InvoiceReadResult {
 
 const OCR_PAGE_LIMIT = 5;
 
+function useLightweightOcr() {
+  const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
+  return window.innerWidth < 820 ||
+    (window.matchMedia("(pointer: coarse)").matches && window.innerWidth < 1200) ||
+    (memory !== undefined && memory <= 4);
+}
+
 export async function createInvoiceOcrWorker(onProgress: (progress: number) => void) {
   return createWorker("eng", undefined, {
     logger: (message) => {
       if (message.status === "recognizing text") onProgress(Math.round(message.progress * 100));
     },
   });
+}
+
+async function recognizeCanvas(worker: Worker, canvas: HTMLCanvasElement, preprocess: "binary" | "contrast" | null) {
+  const input = preprocess ? enhanceCanvas(canvas, preprocess === "binary") : canvas;
+  try {
+    return await worker.recognize(input);
+  } finally {
+    if (input !== canvas) {
+      input.width = 0;
+      input.height = 0;
+    }
+  }
 }
 
 export async function extractInvoiceText(
@@ -48,25 +67,30 @@ export async function extractInvoiceText(
   if (file.type.startsWith("image/")) {
     if (!worker) throw new Error("OCR is unavailable. Check your internet connection and retry.");
     const canvas = await prepareImageCanvas(file);
-    const result = await worker.recognize(enhanceCanvas(canvas, true));
-    if (result.data.confidence < 55 || result.data.text.trim().length < 80) {
-      const retry = await worker.recognize(enhanceCanvas(canvas, false));
-      if (
-        retry.data.confidence > result.data.confidence ||
-        retry.data.text.trim().length > result.data.text.trim().length
-      ) {
-        return {
-          text: retry.data.text,
-          method: "browser-ocr",
-          confidence: Math.round(retry.data.confidence),
-        };
+    try {
+      const result = await recognizeCanvas(worker, canvas, useLightweightOcr() ? null : "binary");
+      if (result.data.confidence < 55 || result.data.text.trim().length < 80) {
+        const retry = await recognizeCanvas(worker, canvas, "contrast");
+        if (
+          retry.data.confidence > result.data.confidence ||
+          retry.data.text.trim().length > result.data.text.trim().length
+        ) {
+          return {
+            text: retry.data.text,
+            method: "browser-ocr",
+            confidence: Math.round(retry.data.confidence),
+          };
+        }
       }
+      return {
+        text: result.data.text,
+        method: "browser-ocr",
+        confidence: Math.round(result.data.confidence),
+      };
+    } finally {
+      canvas.width = 0;
+      canvas.height = 0;
     }
-    return {
-      text: result.data.text,
-      method: "browser-ocr",
-      confidence: Math.round(result.data.confidence),
-    };
   }
   if (file.type !== "application/pdf" && !fileName.toLowerCase().endsWith(".pdf")) {
     throw new Error("This file type is not supported for invoice reading.");
@@ -98,17 +122,17 @@ export async function extractInvoiceText(
       pageNumber += 1
     ) {
       const page = await document.getPage(pageNumber);
-      const viewport = page.getViewport({ scale: 2.35 });
+      const viewport = page.getViewport({ scale: useLightweightOcr() ? 1.45 : 2.35 });
       const canvas = window.document.createElement("canvas");
       const context = canvas.getContext("2d");
       if (!context) throw new Error("This browser could not prepare the PDF for reading.");
       canvas.width = Math.ceil(viewport.width);
       canvas.height = Math.ceil(viewport.height);
       await page.render({ canvas, canvasContext: context, viewport }).promise;
-      const firstPass = await worker.recognize(enhanceCanvas(canvas, true));
+      const firstPass = await recognizeCanvas(worker, canvas, useLightweightOcr() ? null : "binary");
       let recognized = firstPass;
       if (firstPass.data.confidence < 55 || firstPass.data.text.trim().length < 80) {
-        const retry = await worker.recognize(enhanceCanvas(canvas, false));
+        const retry = await recognizeCanvas(worker, canvas, "contrast");
         if (
           retry.data.confidence > firstPass.data.confidence ||
           retry.data.text.trim().length > firstPass.data.text.trim().length
@@ -252,7 +276,9 @@ function isReadablePdfText(text: string) {
 async function prepareImageCanvas(file: Blob) {
   const bitmap = await createImageBitmap(file);
   const maxDimension = Math.max(bitmap.width, bitmap.height);
-  const scale = Math.min(2.5, Math.max(1, 2600 / Math.max(maxDimension, 1)));
+  const lightweight = useLightweightOcr();
+  const targetDimension = lightweight ? 1800 : 2600;
+  const scale = Math.min(lightweight ? 1.5 : 2.5, targetDimension / Math.max(maxDimension, 1));
   const canvas = window.document.createElement("canvas");
   canvas.width = Math.round(bitmap.width * scale);
   canvas.height = Math.round(bitmap.height * scale);

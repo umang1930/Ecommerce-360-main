@@ -5,6 +5,7 @@ import {
   FileImage,
   FileScan,
   FileText,
+  RotateCcw,
   Trash2,
   UploadCloud,
 } from "lucide-react";
@@ -14,6 +15,7 @@ import {
   getUploadedPdf,
   listInvoices,
   saveInvoices,
+  updateInvoiceExtraction,
   type UploadedPdf,
 } from "@/lib/dashboard/uploaded-pdfs";
 import {
@@ -199,6 +201,36 @@ export function InvoiceCenter() {
       window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Could not open this invoice.");
+    }
+  }
+
+  async function retryReading(invoice: UploadedPdf) {
+    setBusy(true);
+    setError("");
+    setMessage("");
+    setOcrProgress(`Retrying ${invoice.name}…`);
+    let worker: Awaited<ReturnType<typeof createInvoiceOcrWorker>> | null = null;
+    try {
+      const blob = await getUploadedPdf(invoice.id);
+      const file = new File([blob], invoice.name, { type: invoice.type });
+      try {
+        worker = await createInvoiceOcrWorker((percent) => setOcrProgress(`${invoice.name}: reading ${percent}%`));
+      } catch {
+        // PDFs with embedded selectable text can still be read without OCR.
+      }
+      const read = await extractInvoiceText(file, invoice.name, worker ?? undefined);
+      const extracted = extractInvoiceMetadata(read.text, read);
+      await updateInvoiceExtraction(invoice.id, extracted);
+      await refresh();
+      setMessage(extracted.extraction === "complete" ? "Invoice details were updated." : "Reading finished; please review the extracted text.");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Could not read this invoice.");
+    } finally {
+      if (worker) {
+        try { await worker.terminate(); } catch { /* The OCR result is already saved or reported. */ }
+      }
+      setBusy(false);
+      setOcrProgress("");
     }
   }
 
@@ -425,6 +457,19 @@ export function InvoiceCenter() {
                       >
                         <Trash2 className="size-4" />
                       </Button>
+                      {invoice.invoiceData?.extraction !== "complete" ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={busy}
+                          onClick={() => void retryReading(invoice)}
+                          aria-label={`Retry reading ${invoice.name}`}
+                        >
+                          <RotateCcw className="size-4" />
+                          <span className="sr-only">Retry reading</span>
+                        </Button>
+                      ) : null}
                     </div>
                   </div>
                   <div className="mt-3 rounded-xl border border-border bg-muted/30 px-3 py-3 sm:px-4">
@@ -456,8 +501,7 @@ export function InvoiceCenter() {
                       !invoice.invoiceData?.bankAccountNumber &&
                       !invoice.invoiceData?.ifsc ? (
                         <p className="col-span-full text-xs text-muted-foreground">
-                          Vendor and payment details are not available yet. Retry reading this
-                          invoice.
+                          {invoice.invoiceData?.reason ?? "Vendor and payment details have not been extracted yet."}
                         </p>
                       ) : null}
                     </dl>
