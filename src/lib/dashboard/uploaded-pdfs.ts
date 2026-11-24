@@ -33,9 +33,10 @@ export async function listUploadedPdfs(): Promise<UploadedPdf[]> {
   return api<UploadedPdf[]>("/api/invoices?category=pdf");
 }
 
-export async function saveInvoices(files: File[], extracted: InvoiceExtraction[]): Promise<void> {
-  for (const [index, file] of files.entries()) {
-    await uploadFile(file, "invoice", extracted[index]);
+export async function saveInvoices(files: File[], onFile?: (name: string) => void): Promise<void> {
+  for (const file of files) {
+    onFile?.(file.name);
+    await uploadFile(file, "invoice");
   }
 }
 
@@ -87,11 +88,11 @@ async function migrateLegacyFiles() {
   await migration;
 }
 
-export async function updateInvoiceExtraction(id: string, invoiceData: InvoiceExtraction): Promise<void> {
+export async function updateInvoiceExtraction(id: string): Promise<void> {
   await api<{ ok: true }>("/api/invoices", {
     method: "PATCH",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ id, invoiceData }),
+    body: JSON.stringify({ id, retry: true }),
   });
 }
 

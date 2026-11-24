@@ -25,7 +25,16 @@ export default defineConfig(({ command, mode }) => {
       ? [react(), tailwindcss(), tsconfigPaths()]
       : [
           tanstackStart({ server: { entry: "server" } }),
-          ...(command === "build" ? [nitro({ preset: "vercel", renderer: false })] : []),
+          ...(command === "build" ? [nitro({
+            preset: "vercel",
+            renderer: false,
+            vercel: {
+              functions: {
+                includeFiles: ["node_modules/tesseract.js/**", "node_modules/tesseract.js-core/**"],
+                maxDuration: 60,
+              },
+            },
+          })] : []),
           react(),
           tailwindcss(),
           tsconfigPaths(),

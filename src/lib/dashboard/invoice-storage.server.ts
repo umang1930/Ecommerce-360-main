@@ -19,16 +19,19 @@ function getDatabase(): Promise<Database> {
         user: process.env["DB_USER"] ?? "root", password: process.env["DB_PASSWORD"] ?? "",
         database: process.env["DB_NAME"] ?? "ecommerce360_orders", connectionLimit: 5,
       });
-      return { dialect: "mysql", query: async (text, params = []) => {
+      const database: Database = { dialect: "mysql", query: async (text: string, params: unknown[] = []) => {
         const [result] = await pool.query(text.replace(/\$(\d+)/g, "?"), params);
         if (Array.isArray(result)) return { rows: result as Row[], affectedRows: result.length };
         const header = result as { insertId?: number; affectedRows?: number };
-        return { rows: [], insertId: header.insertId, affectedRows: header.affectedRows };
+        return { rows: [], ...(header.insertId !== undefined ? { insertId: header.insertId } : {}),
+          ...(header.affectedRows !== undefined ? { affectedRows: header.affectedRows } : {}) };
       } };
+      return database;
     }
     if (connectionString) {
       const client = neon(connectionString);
-      return { dialect: "postgres", query: async (text, params = []) => ({ rows: await client.query(text, params) as Row[] }) };
+      const database: Database = { dialect: "postgres", query: async (text: string, params: unknown[] = []) => ({ rows: await client.query(text, params) as Row[] }) };
+      return database;
     }
     if (process.env["NODE_ENV"] === "production") {
       throw new Error("Invoice storage needs a persistent database. Set DATABASE_URL in the deployment environment.");
@@ -37,12 +40,13 @@ function getDatabase(): Promise<Database> {
     const dataDir = resolve(process.cwd(), ".local-data", "invoice-files");
     await mkdir(dataDir, { recursive: true });
     const client = await PGlite.create(dataDir);
-    return { dialect: "postgres", query: async (text, params = []) => {
+    const database: Database = { dialect: "postgres", query: async (text: string, params: unknown[] = []) => {
       const result = await client.query(text, params);
-      return { rows: result.rows as Row[], affectedRows: result.affectedRows };
+      return { rows: result.rows as Row[], ...(result.affectedRows !== undefined ? { affectedRows: result.affectedRows } : {}) };
     } };
+    return database;
   })().catch((error) => { databasePromise = undefined; throw error; });
-  return databasePromise;
+  return databasePromise!;
 }
 
 let schemaPromise: Promise<void> | undefined;

@@ -1,5 +1,3 @@
-import { createWorker, type Worker } from "tesseract.js";
-import type { PDFDocumentProxy } from "pdfjs-dist";
 
 export type InvoicePriority =
   "vendor-priority" | "overdue" | "due-soon" | "high-amount" | "needs-review" | "upcoming" | "paid";
@@ -20,137 +18,14 @@ export interface InvoiceExtraction {
   recognizedText?: string;
   rawRecognizedText?: string;
   corrections?: string[];
-  readMethod?: "embedded-pdf-text" | "browser-ocr";
+  readMethod?: "embedded-pdf-text" | "browser-ocr" | "server-ocr";
   confidence?: number;
 }
 
 export interface InvoiceReadResult {
   text: string;
-  method: "embedded-pdf-text" | "browser-ocr";
+  method: "embedded-pdf-text" | "browser-ocr" | "server-ocr";
   confidence?: number;
-}
-
-const OCR_PAGE_LIMIT = 5;
-
-function useLightweightOcr() {
-  const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
-  return window.innerWidth < 820 ||
-    (window.matchMedia("(pointer: coarse)").matches && window.innerWidth < 1200) ||
-    (memory !== undefined && memory <= 4);
-}
-
-export async function createInvoiceOcrWorker(onProgress: (progress: number) => void) {
-  return createWorker("eng", undefined, {
-    logger: (message) => {
-      if (message.status === "recognizing text") onProgress(Math.round(message.progress * 100));
-    },
-  });
-}
-
-async function recognizeCanvas(worker: Worker, canvas: HTMLCanvasElement, preprocess: "binary" | "contrast" | null) {
-  const input = preprocess ? enhanceCanvas(canvas, preprocess === "binary") : canvas;
-  try {
-    return await worker.recognize(input);
-  } finally {
-    if (input !== canvas) {
-      input.width = 0;
-      input.height = 0;
-    }
-  }
-}
-
-export async function extractInvoiceText(
-  file: Blob,
-  fileName: string,
-  worker?: Worker,
-): Promise<InvoiceReadResult> {
-  if (file.type.startsWith("image/")) {
-    if (!worker) throw new Error("OCR is unavailable. Check your internet connection and retry.");
-    const canvas = await prepareImageCanvas(file);
-    try {
-      const result = await recognizeCanvas(worker, canvas, useLightweightOcr() ? null : "binary");
-      if (result.data.confidence < 55 || result.data.text.trim().length < 80) {
-        const retry = await recognizeCanvas(worker, canvas, "contrast");
-        if (
-          retry.data.confidence > result.data.confidence ||
-          retry.data.text.trim().length > result.data.text.trim().length
-        ) {
-          return {
-            text: retry.data.text,
-            method: "browser-ocr",
-            confidence: Math.round(retry.data.confidence),
-          };
-        }
-      }
-      return {
-        text: result.data.text,
-        method: "browser-ocr",
-        confidence: Math.round(result.data.confidence),
-      };
-    } finally {
-      canvas.width = 0;
-      canvas.height = 0;
-    }
-  }
-  if (file.type !== "application/pdf" && !fileName.toLowerCase().endsWith(".pdf")) {
-    throw new Error("This file type is not supported for invoice reading.");
-  }
-
-  const [{ getDocument, GlobalWorkerOptions }, workerUrlModule] = await Promise.all([
-    import("pdfjs-dist"),
-    import("pdfjs-dist/build/pdf.worker.min.mjs?url"),
-  ]);
-  GlobalWorkerOptions.workerSrc = workerUrlModule.default;
-  const document = await getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
-  try {
-    const embeddedText = await extractEmbeddedPdfText(document, OCR_PAGE_LIMIT);
-    if (isReadablePdfText(embeddedText)) {
-      return { text: embeddedText, method: "embedded-pdf-text" };
-    }
-
-    if (!worker) {
-      throw new Error(
-        "This PDF has no readable embedded text, and browser OCR is unavailable. Check your internet connection and retry.",
-      );
-    }
-
-    const pages: string[] = [];
-    const confidences: number[] = [];
-    for (
-      let pageNumber = 1;
-      pageNumber <= Math.min(document.numPages, OCR_PAGE_LIMIT);
-      pageNumber += 1
-    ) {
-      const page = await document.getPage(pageNumber);
-      const viewport = page.getViewport({ scale: useLightweightOcr() ? 1.45 : 2.35 });
-      const canvas = window.document.createElement("canvas");
-      const context = canvas.getContext("2d");
-      if (!context) throw new Error("This browser could not prepare the PDF for reading.");
-      canvas.width = Math.ceil(viewport.width);
-      canvas.height = Math.ceil(viewport.height);
-      await page.render({ canvas, canvasContext: context, viewport }).promise;
-      const firstPass = await recognizeCanvas(worker, canvas, useLightweightOcr() ? null : "binary");
-      let recognized = firstPass;
-      if (firstPass.data.confidence < 55 || firstPass.data.text.trim().length < 80) {
-        const retry = await recognizeCanvas(worker, canvas, "contrast");
-        if (
-          retry.data.confidence > firstPass.data.confidence ||
-          retry.data.text.trim().length > firstPass.data.text.trim().length
-        )
-          recognized = retry;
-      }
-      pages.push(recognized.data.text);
-      confidences.push(recognized.data.confidence);
-      canvas.width = 0;
-      canvas.height = 0;
-    }
-    const confidence = confidences.length
-      ? Math.round(confidences.reduce((sum, value) => sum + value, 0) / confidences.length)
-      : 0;
-    return { text: pages.join("\n"), method: "browser-ocr", confidence };
-  } finally {
-    await document.destroy();
-  }
 }
 
 export function extractInvoiceMetadata(
@@ -180,7 +55,8 @@ export function extractInvoiceMetadata(
       correctedText,
     );
   const lowConfidence =
-    read?.method === "browser-ocr" && read.confidence !== undefined && read.confidence < 55;
+    (read?.method === "browser-ocr" || read?.method === "server-ocr") &&
+    read.confidence !== undefined && read.confidence < 55;
   const extracted: InvoiceExtraction = {
     dueDate,
     invoiceDate,
@@ -232,119 +108,6 @@ function calculateGstinCheckCharacter(first14: string) {
     sum += Math.floor(product / 36) + (product % 36);
   }
   return alphabet[(36 - (sum % 36)) % 36] ?? "";
-}
-
-async function extractEmbeddedPdfText(pdf: PDFDocumentProxy, pageLimit: number) {
-  const outputLines: string[] = [];
-  for (let pageNumber = 1; pageNumber <= Math.min(pdf.numPages, pageLimit); pageNumber += 1) {
-    const page = await pdf.getPage(pageNumber);
-    const content = await page.getTextContent();
-    const lines: Array<{ y: number; parts: Array<{ x: number; text: string }> }> = [];
-    for (const item of content.items) {
-      if (
-        !("str" in item) ||
-        !("transform" in item) ||
-        typeof item.str !== "string" ||
-        !item.str.trim()
-      )
-        continue;
-      const x = item.transform[4] ?? 0;
-      const y = item.transform[5] ?? 0;
-      let line = lines.find((candidate) => Math.abs(candidate.y - y) < 3);
-      if (!line) {
-        line = { y, parts: [] };
-        lines.push(line);
-      }
-      line.parts.push({ x, text: item.str });
-    }
-    lines.sort((left, right) => right.y - left.y);
-    for (const line of lines) {
-      line.parts.sort((left, right) => left.x - right.x);
-      outputLines.push(line.parts.map((part) => part.text).join(" "));
-    }
-  }
-  return outputLines.join("\n");
-}
-
-function isReadablePdfText(text: string) {
-  const trimmed = text.trim();
-  const wordCount = trimmed.match(/[A-Za-z]{2,}/g)?.length ?? 0;
-  const visibleCount = trimmed.replace(/\s/g, "").length;
-  return trimmed.length >= 30 && wordCount >= 3 && visibleCount / trimmed.length > 0.5;
-}
-
-async function prepareImageCanvas(file: Blob) {
-  const bitmap = await createImageBitmap(file);
-  const maxDimension = Math.max(bitmap.width, bitmap.height);
-  const lightweight = useLightweightOcr();
-  const targetDimension = lightweight ? 1800 : 2600;
-  const scale = Math.min(lightweight ? 1.5 : 2.5, targetDimension / Math.max(maxDimension, 1));
-  const canvas = window.document.createElement("canvas");
-  canvas.width = Math.round(bitmap.width * scale);
-  canvas.height = Math.round(bitmap.height * scale);
-  const context = canvas.getContext("2d");
-  if (!context) throw new Error("This browser could not prepare the image for reading.");
-  context.fillStyle = "white";
-  context.fillRect(0, 0, canvas.width, canvas.height);
-  context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  bitmap.close();
-  return canvas;
-}
-
-function enhanceCanvas(source: HTMLCanvasElement, binary: boolean) {
-  const canvas = window.document.createElement("canvas");
-  canvas.width = source.width;
-  canvas.height = source.height;
-  const context = canvas.getContext("2d");
-  if (!context) return source;
-  context.drawImage(source, 0, 0);
-  const image = context.getImageData(0, 0, canvas.width, canvas.height);
-  const { data } = image;
-  const histogram = new Uint32Array(256);
-  for (let index = 0; index < data.length; index += 4) {
-    const gray = Math.round(
-      data[index]! * 0.299 + data[index + 1]! * 0.587 + data[index + 2]! * 0.114,
-    );
-    histogram[gray] = (histogram[gray] ?? 0) + 1;
-  }
-  let threshold = 175;
-  if (binary) {
-    const total = canvas.width * canvas.height;
-    let sum = 0;
-    for (let level = 0; level < 256; level += 1) sum += level * (histogram[level] ?? 0);
-    let backgroundWeight = 0;
-    let backgroundSum = 0;
-    let maximumVariance = 0;
-    for (let level = 0; level < 256; level += 1) {
-      backgroundWeight += histogram[level] ?? 0;
-      if (!backgroundWeight) continue;
-      const foregroundWeight = total - backgroundWeight;
-      if (!foregroundWeight) break;
-      backgroundSum += level * (histogram[level] ?? 0);
-      const backgroundMean = backgroundSum / backgroundWeight;
-      const foregroundMean = (sum - backgroundSum) / foregroundWeight;
-      const variance = backgroundWeight * foregroundWeight * (backgroundMean - foregroundMean) ** 2;
-      if (variance > maximumVariance) {
-        maximumVariance = variance;
-        threshold = level;
-      }
-    }
-  }
-  for (let index = 0; index < data.length; index += 4) {
-    const gray = Math.round(
-      data[index]! * 0.299 + data[index + 1]! * 0.587 + data[index + 2]! * 0.114,
-    );
-    const adjusted = binary
-      ? gray > threshold
-        ? 255
-        : 0
-      : Math.max(0, Math.min(255, (gray - 128) * 1.35 + 128));
-    data[index] = adjusted;
-    data[index + 1] = adjusted;
-    data[index + 2] = adjusted;
-  }
-  context.putImageData(image, 0, 0);
-  return canvas;
 }
 
 export function getInvoicePriority(

@@ -7,6 +7,7 @@ import {
   updateStoredInvoice,
 } from "@/lib/dashboard/invoice-storage.server";
 import type { InvoiceExtraction } from "@/lib/dashboard/invoice-ocr";
+import { extractInvoiceOnServer } from "@/lib/dashboard/invoice-ocr.server";
 
 function sameOrigin(request: Request) {
   const origin = request.headers.get("origin");
@@ -30,9 +31,11 @@ export const Route = createFileRoute("/api/invoices")({
             if (!record) return Response.json({ error: "Invoice not found." }, { status: 404 });
             const data = record["data"];
             const bytes = data instanceof Uint8Array ? data : new Uint8Array(data as ArrayBuffer);
+            const body = new ArrayBuffer(bytes.byteLength);
+            new Uint8Array(body).set(bytes);
             const type = String(record["type"] ?? "application/octet-stream");
             const name = String(record["name"] ?? "invoice").replace(/[\r\n"\\]/g, "_");
-            return new Response(bytes, { headers: {
+            return new Response(body, { headers: {
               "content-type": type,
               "content-length": String(bytes.byteLength),
               "content-disposition": `inline; filename="${name}"; filename*=UTF-8''${encodeURIComponent(String(record["name"] ?? "invoice"))}`,
@@ -71,18 +74,41 @@ export const Route = createFileRoute("/api/invoices")({
           }
           const id = typeof requestedId === "string" ? requestedId : crypto.randomUUID();
           const type = isPdf ? "application/pdf" : rawType || "application/octet-stream";
+          const bytes = new Uint8Array(await file.arrayBuffer());
+          const isLegacyMigration = typeof requestedId === "string" && Boolean(invoiceData);
+          if (category === "invoice" && !isLegacyMigration) {
+            try {
+              invoiceData = await extractInvoiceOnServer(bytes, type);
+            } catch (error) {
+              invoiceData = {
+                dueDate: null,
+                paid: false,
+                extraction: "needs-review",
+                reason: `Server reading failed: ${error instanceof Error ? error.message : "The invoice could not be processed."}`,
+                recognizedText: "",
+              };
+            }
+          }
           await saveStoredInvoice({ id, name: file.name, type,
-            category, invoiceData, bytes: new Uint8Array(await file.arrayBuffer()) });
-          return Response.json({ id }, { status: 201 });
+            category, ...(invoiceData ? { invoiceData } : {}), bytes });
+          return Response.json({ id, ...(invoiceData ? { invoiceData } : {}) }, { status: 201 });
         } catch (error) { return errorResponse(error); }
       },
       PATCH: async ({ request }) => {
         if (!sameOrigin(request)) return Response.json({ error: "Cross-origin update rejected." }, { status: 403 });
         try {
-          const body = await request.json() as { id?: unknown; invoiceData?: unknown };
-          if (typeof body.id !== "string" || !body.invoiceData || typeof body.invoiceData !== "object") {
-            return Response.json({ error: "Invoice ID and metadata are required." }, { status: 400 });
+          const body = await request.json() as { id?: unknown; retry?: unknown; invoiceData?: unknown };
+          if (typeof body.id !== "string") return Response.json({ error: "Invoice ID is required." }, { status: 400 });
+          if (body.retry === true) {
+            const record = await readStoredInvoice(body.id);
+            if (!record) return Response.json({ error: "Invoice not found." }, { status: 404 });
+            const data = record["data"];
+            const bytes = data instanceof Uint8Array ? data : new Uint8Array(data as ArrayBuffer);
+            const invoiceData = await extractInvoiceOnServer(bytes, String(record["type"] ?? "application/pdf"));
+            await updateStoredInvoice(body.id, invoiceData);
+            return Response.json({ ok: true, invoiceData });
           }
+          if (!body.invoiceData || typeof body.invoiceData !== "object") return Response.json({ error: "Invoice metadata is required." }, { status: 400 });
           await updateStoredInvoice(body.id, body.invoiceData as InvoiceExtraction);
           return Response.json({ ok: true });
         } catch (error) { return errorResponse(error); }

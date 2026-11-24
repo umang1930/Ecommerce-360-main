@@ -19,12 +19,8 @@ import {
   type UploadedPdf,
 } from "@/lib/dashboard/uploaded-pdfs";
 import {
-  createInvoiceOcrWorker,
-  extractInvoiceMetadata,
-  extractInvoiceText,
   getInvoicePriority,
   priorityOrder,
-  type InvoiceExtraction,
   type InvoicePriority,
 } from "@/lib/dashboard/invoice-ocr";
 import { BrandLoader } from "./BrandLoader";
@@ -135,43 +131,11 @@ export function InvoiceCenter() {
 
     if (accepted.length) {
       setBusy(true);
-      setOcrProgress("Reading invoice files privately in this browser…");
+      setOcrProgress("Uploading invoice files for shared server reading…");
       try {
-        const extracted: InvoiceExtraction[] = [];
-        let activeFile = "Preparing OCR";
-        let worker: Awaited<ReturnType<typeof createInvoiceOcrWorker>> | null = null;
-        try {
-          worker = await createInvoiceOcrWorker((percent) =>
-            setOcrProgress(`${activeFile}: reading ${percent}%`),
-          );
-        } catch {
-          // PDFs with embedded selectable text can still be read without OCR.
-        }
-        for (const file of accepted) {
-          activeFile = file.name;
-          setOcrProgress(`Reading ${file.name}…`);
-          try {
-            const read = await extractInvoiceText(file, file.name, worker ?? undefined);
-            extracted.push(extractInvoiceMetadata(read.text, read));
-          } catch (cause) {
-            const reason =
-              cause instanceof Error ? cause.message : "The OCR process could not read this file.";
-            extracted.push({
-              dueDate: null,
-              paid: false,
-              extraction: "needs-review",
-              reason: `OCR failed: ${reason}`,
-              recognizedText: "",
-            });
-          }
-        }
-        if (worker) await worker.terminate();
-        await saveInvoices(accepted, extracted);
+        await saveInvoices(accepted, (name) => setOcrProgress(`Reading ${name} on the server…`));
         await refresh();
-        const reviewCount = extracted.filter((item) => item.extraction === "needs-review").length;
-        setMessage(
-          `${accepted.length} invoice file${accepted.length === 1 ? "" : "s"} saved. ${reviewCount ? `${reviewCount} need${reviewCount === 1 ? "s" : ""} a due-date review.` : "Due dates were read successfully."}`,
-        );
+        setMessage(`${accepted.length} invoice file${accepted.length === 1 ? "" : "s"} uploaded and processed. Check the priority list for any that need review.`);
       } catch (cause) {
         setError(cause instanceof Error ? cause.message : "Could not save the selected invoices.");
       } finally {
@@ -209,26 +173,13 @@ export function InvoiceCenter() {
     setError("");
     setMessage("");
     setOcrProgress(`Retrying ${invoice.name}…`);
-    let worker: Awaited<ReturnType<typeof createInvoiceOcrWorker>> | null = null;
     try {
-      const blob = await getUploadedPdf(invoice.id);
-      const file = new File([blob], invoice.name, { type: invoice.type });
-      try {
-        worker = await createInvoiceOcrWorker((percent) => setOcrProgress(`${invoice.name}: reading ${percent}%`));
-      } catch {
-        // PDFs with embedded selectable text can still be read without OCR.
-      }
-      const read = await extractInvoiceText(file, invoice.name, worker ?? undefined);
-      const extracted = extractInvoiceMetadata(read.text, read);
-      await updateInvoiceExtraction(invoice.id, extracted);
+      await updateInvoiceExtraction(invoice.id);
       await refresh();
-      setMessage(extracted.extraction === "complete" ? "Invoice details were updated." : "Reading finished; please review the extracted text.");
+      setMessage("Invoice reading finished. Check the updated details and review status.");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Could not read this invoice.");
     } finally {
-      if (worker) {
-        try { await worker.terminate(); } catch { /* The OCR result is already saved or reported. */ }
-      }
       setBusy(false);
       setOcrProgress("");
     }
