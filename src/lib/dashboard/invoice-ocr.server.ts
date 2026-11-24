@@ -1,12 +1,14 @@
 import { createCanvas, loadImage } from "@napi-rs/canvas";
-import { createWorker } from "tesseract.js";
 import { getDocument, type PDFDocumentProxy } from "pdfjs-dist/legacy/build/pdf.mjs";
 import { mkdir } from "node:fs/promises";
+import { createRequire } from "node:module";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { extractInvoiceMetadata, type InvoiceExtraction, type InvoiceReadResult } from "./invoice-ocr";
 
 const OCR_PAGE_LIMIT = 5;
+const require = createRequire(import.meta.url);
+type TesseractWorker = Awaited<ReturnType<typeof import("tesseract.js").createWorker>>;
 
 function readablePdfText(text: string) {
   const trimmed = text.trim();
@@ -35,7 +37,7 @@ async function extractEmbeddedText(pdf: PDFDocumentProxy) {
   return pages.join("\n");
 }
 
-async function recognizeImage(worker: Awaited<ReturnType<typeof createWorker>>, bytes: Uint8Array) {
+async function recognizeImage(worker: TesseractWorker, bytes: Uint8Array) {
   const image = await loadImage(bytes);
   const scale = Math.min(1, 2200 / Math.max(image.width, image.height, 1));
   const canvas = createCanvas(Math.max(1, Math.round(image.width * scale)), Math.max(1, Math.round(image.height * scale)));
@@ -47,7 +49,7 @@ async function recognizeImage(worker: Awaited<ReturnType<typeof createWorker>>, 
   return { text: result.data.text, method: "server-ocr" as const, confidence: Math.round(result.data.confidence) };
 }
 
-async function recognizePdf(worker: Awaited<ReturnType<typeof createWorker>>, pdf: PDFDocumentProxy): Promise<InvoiceReadResult> {
+async function recognizePdf(worker: TesseractWorker, pdf: PDFDocumentProxy): Promise<InvoiceReadResult> {
   const pages: string[] = [];
   const confidences: number[] = [];
   for (let number = 1; number <= Math.min(pdf.numPages, OCR_PAGE_LIMIT); number += 1) {
@@ -74,7 +76,7 @@ async function recognizePdf(worker: Awaited<ReturnType<typeof createWorker>>, pd
 export async function extractInvoiceOnServer(bytes: Uint8Array, mimeType: string): Promise<InvoiceExtraction> {
   const isImage = mimeType.startsWith("image/");
   const pdf = isImage ? undefined : await getDocument({ data: bytes }).promise;
-  let worker: Awaited<ReturnType<typeof createWorker>> | undefined;
+  let worker: TesseractWorker | undefined;
   try {
     if (pdf) {
       const embedded = await extractEmbeddedText(pdf);
@@ -82,6 +84,7 @@ export async function extractInvoiceOnServer(bytes: Uint8Array, mimeType: string
     }
     const cachePath = join(tmpdir(), "ecommerce360-tessdata");
     await mkdir(cachePath, { recursive: true });
+    const { createWorker } = require("tesseract.js") as typeof import("tesseract.js");
     worker = await createWorker("eng", undefined, {
       langPath: "https://tessdata.projectnaptha.com/4.0.0",
       workerPath: join(process.cwd(), "node_modules", "tesseract.js", "src", "worker-script", "node", "index.js"),
