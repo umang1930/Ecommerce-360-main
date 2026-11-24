@@ -86,7 +86,9 @@ export async function extractInvoiceOnServer(bytes: Uint8Array, mimeType: string
   if (!isImage) {
     await preparePdfWorker();
   }
-  const pdf = isImage ? undefined : await getDocument({ data: bytes }).promise;
+  // PDF.js transfers the supplied buffer to its worker. Give it a copy so the
+  // caller can still persist the original upload bytes after OCR completes.
+  const pdf = isImage ? undefined : await getDocument({ data: new Uint8Array(bytes) }).promise;
   let worker: TesseractWorker | undefined;
   try {
     if (pdf) {
