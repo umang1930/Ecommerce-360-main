@@ -77,7 +77,7 @@ async function recognizePdf(worker: TesseractWorker, pdf: PDFDocumentProxy): Pro
 export async function extractInvoiceOnServer(bytes: Uint8Array, mimeType: string): Promise<InvoiceExtraction> {
   const isImage = mimeType.startsWith("image/");
   if (!isImage) {
-    const pdfWorkerPath = require.resolve("pdfjs-dist/legacy/build/pdf.worker.mjs");
+    const pdfWorkerPath = join(process.cwd(), "node_modules", "pdfjs-dist", "legacy", "build", "pdf.worker.mjs");
     GlobalWorkerOptions.workerSrc = pathToFileURL(pdfWorkerPath).href;
   }
   const pdf = isImage ? undefined : await getDocument({ data: bytes }).promise;
