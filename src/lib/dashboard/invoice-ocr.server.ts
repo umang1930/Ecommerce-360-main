@@ -1,7 +1,7 @@
 import { createCanvas, loadImage } from "@napi-rs/canvas";
+import { createWorker } from "tesseract.js";
 import { getDocument, GlobalWorkerOptions, type PDFDocumentProxy } from "pdfjs-dist/legacy/build/pdf.mjs";
 import { mkdir, writeFile } from "node:fs/promises";
-import { createRequire } from "node:module";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { pathToFileURL } from "node:url";
@@ -9,9 +9,8 @@ import pdfWorkerSource from "pdfjs-dist/legacy/build/pdf.worker.mjs?raw";
 import { extractInvoiceMetadata, type InvoiceExtraction, type InvoiceReadResult } from "./invoice-ocr";
 
 const OCR_PAGE_LIMIT = 5;
-const require = createRequire(import.meta.url);
 const pdfWorkerPath = join(tmpdir(), "ecommerce360-pdf.worker.mjs");
-type TesseractWorker = Awaited<ReturnType<typeof import("tesseract.js").createWorker>>;
+type TesseractWorker = Awaited<ReturnType<typeof createWorker>>;
 
 async function preparePdfWorker() {
   await writeFile(pdfWorkerPath, pdfWorkerSource, "utf8");
@@ -97,7 +96,6 @@ export async function extractInvoiceOnServer(bytes: Uint8Array, mimeType: string
     }
     const cachePath = join(tmpdir(), "ecommerce360-tessdata");
     await mkdir(cachePath, { recursive: true });
-    const { createWorker } = require("tesseract.js") as typeof import("tesseract.js");
     worker = await createWorker("eng", undefined, {
       langPath: "https://tessdata.projectnaptha.com/4.0.0",
       workerPath: join(process.cwd(), "node_modules", "tesseract.js", "src", "worker-script", "node", "index.js"),
