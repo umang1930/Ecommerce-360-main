@@ -326,6 +326,12 @@ export function InvoiceCenter() {
               const image = invoice.type.startsWith("image/");
               const Icon = image ? FileImage : FileText;
               const priority = getInvoicePriority(invoice.invoiceData, amountThreshold);
+              const compactVendor = invoice.invoiceData?.vendorName?.replace(/[^A-Za-z]/g, "").toLowerCase();
+              const vendorName = compactVendor === "originalforrecipient" ? null : invoice.invoiceData?.vendorName;
+              const hasPaymentDetails = Boolean(
+                vendorName || invoice.invoiceData?.vendorGstin || invoice.invoiceData?.bankName ||
+                invoice.invoiceData?.accountHolder || invoice.invoiceData?.bankAccountNumber || invoice.invoiceData?.ifsc,
+              );
               return (
                 <li key={invoice.id} className="px-5 py-4">
                   <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:gap-5">
@@ -367,10 +373,10 @@ export function InvoiceCenter() {
                           <span>File: {formatSize(invoice.size)}</span>
                           <span>Uploaded: {formatDate(invoice.uploadedAt)}</span>
                         </div>
-                        {invoice.invoiceData?.vendorName ? (
+                        {vendorName ? (
                           <p className="mt-1.5 text-xs font-medium text-foreground/80">
                             Vendor:{" "}
-                            <span className="font-semibold">{invoice.invoiceData.vendorName}</span>
+                            <span className="font-semibold">{vendorName}</span>
                           </p>
                         ) : null}
                       </div>
@@ -429,7 +435,7 @@ export function InvoiceCenter() {
                     </p>
                     <dl className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3 xl:grid-cols-6">
                       {[
-                        ["Vendor", invoice.invoiceData?.vendorName],
+                        ["Vendor", vendorName],
                         ["GSTIN", invoice.invoiceData?.vendorGstin],
                         ["Bank", invoice.invoiceData?.bankName],
                         ["Account holder", invoice.invoiceData?.accountHolder],
@@ -445,14 +451,9 @@ export function InvoiceCenter() {
                             </dd>
                           </div>
                         ))}
-                      {!invoice.invoiceData?.vendorName &&
-                      !invoice.invoiceData?.vendorGstin &&
-                      !invoice.invoiceData?.bankName &&
-                      !invoice.invoiceData?.accountHolder &&
-                      !invoice.invoiceData?.bankAccountNumber &&
-                      !invoice.invoiceData?.ifsc ? (
+                      {!hasPaymentDetails ? (
                         <p className="col-span-full text-xs text-muted-foreground">
-                          {invoice.invoiceData?.reason ?? "Vendor and payment details have not been extracted yet."}
+                          Vendor and payment details have not been extracted yet.
                         </p>
                       ) : null}
                     </dl>

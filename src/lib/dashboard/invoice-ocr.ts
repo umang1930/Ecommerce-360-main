@@ -161,7 +161,7 @@ export function priorityOrder(priority: InvoicePriority) {
 function findVendorName(text: string) {
   const header = text.split(/\b(?:bill\s+to|buyer\s+details|invoice\s+details)\b/i)[0] ?? text;
   const ignored =
-    /^(?:tax\s+invoice|invoice|proforma\s+invoice|credit\s+note|debit\s+note|original|duplicate|triplicate|gstin(?:\s+.*)?|phone(?:\s+no\.?)?\s*[:#-]?.*|state\s*[:#-]?.*|address\s*[:#-]?.*)$/i;
+    /^(?:tax\s+invoice|invoice|proforma\s+invoice|credit\s+note|debit\s+note|original(?:\s*for\s*recipient)?|duplicate|triplicate|gstin(?:\s+.*)?|phone(?:\s+no\.?)?\s*[:#-]?.*|state\s*[:#-]?.*|address\s*[:#-]?.*)$/i;
   const candidate = header
     .split(/\r?\n/)
     .map((line) =>
@@ -170,10 +170,11 @@ function findVendorName(text: string) {
         .trim()
         .replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9&(). -]+$/g, ""),
     )
-    .find(
-      (line) =>
-        line.length >= 2 && line.length <= 80 && /[A-Za-z]/.test(line) && !ignored.test(line),
-    );
+    .find((line) => {
+      const compact = line.replace(/[^A-Za-z]/g, "").toLowerCase();
+      const invoiceMark = /^(?:originalforrecipient|originalfordisplay|duplicatefortransport|triplicatefortransporter|taxinvoice|invoice)$/.test(compact);
+      return line.length >= 2 && line.length <= 80 && /[A-Za-z]/.test(line) && !ignored.test(line) && !invoiceMark;
+    });
   return candidate || null;
 }
 
